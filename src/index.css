@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --color-brand-blue: #004a99;
+  --color-brand-orange: #ee4400;
+  --color-brand-light: #f8fafc;
+  --color-brand-dark: #0f172a;
+  
+  --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+  --shadow-soft: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+}
+
+:root {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #0f172a;
+  background-color: var(--color-brand-light);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background-color: rgba(0, 74, 153, 0.1);
+  color: #004a99;
+}
+
+/* Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* Floating Animation */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
