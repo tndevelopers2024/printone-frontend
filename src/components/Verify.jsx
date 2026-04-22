@@ -5,6 +5,7 @@ import { HiOutlineCalendar, HiOutlineChevronLeft, HiOutlineChevronRight } from '
 export default function Verify({ onVerified }) {
   const [formData, setFormData] = useState({ name: '', email: '', dob: '' })
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [viewDate, setViewDate] = useState(new Date())
   const [calendarDirection, setCalendarDirection] = useState('down')
@@ -58,6 +59,7 @@ export default function Verify({ onVerified }) {
       return
     }
 
+    setIsLoading(true)
     try {
       const sanitizedData = {
         name: formData.name.trim(),
@@ -80,9 +82,11 @@ export default function Verify({ onVerified }) {
         }
       } else {
         setError(data.message || 'Verification failed')
+        setIsLoading(false)
       }
     } catch (err) {
       setError('System communication error.')
+      setIsLoading(false)
     }
   }
 
@@ -263,10 +267,20 @@ export default function Verify({ onVerified }) {
               
               <button 
                 type="submit"
-                className="w-full sm:w-auto bg-brand-orange hover:bg-orange-600 text-white font-black py-4 px-8 rounded-full transition-all shadow-lg shadow-brand-orange/20 flex items-center justify-center gap-2 text-xs uppercase tracking-widest cursor-pointer"
+                disabled={isLoading}
+                className={`w-full sm:w-auto bg-brand-orange hover:bg-orange-600 text-white font-black py-4 px-8 rounded-full transition-all shadow-lg shadow-brand-orange/20 flex items-center justify-center gap-2 text-xs uppercase tracking-widest ${isLoading ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
               >
-                Verify & Continue
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    Verify & Continue
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -276,11 +290,11 @@ export default function Verify({ onVerified }) {
 
         <div className="grid grid-cols-2 gap-4 mt-12 border-t border-slate-100 pt-6">
            <div className="text-center sm:text-left">
-              <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Verify</p>
-              <p className="text-[16px] font-bold text-slate-900">Tiger Analytics API</p>
+              <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Verified by</p>
+              <p className="text-[16px] font-bold text-slate-900">Tiger Analytics</p>
            </div>
            <div className="text-center sm:text-left">
-              <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Dispatch</p>
+              <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Fulfillment Partner</p>
               <p className="text-[16px] font-bold text-slate-900">PrintOne</p>
            </div>
         </div>

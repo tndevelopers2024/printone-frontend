@@ -49,24 +49,33 @@ const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
               We are defining the next generation of corporate onboarding. Empowering employees with selection, and companies with control.
             </p>
           </div>
-          <div className="md:col-span-8 flex flex-wrap md:justify-end gap-16 md:gap-24">
+          <div className="md:col-span-8 flex flex-wrap md:justify-end gap-16 md:gap-20">
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Organization</h4>
-              <p className="text-sm text-brand-dark font-bold hover:text-brand-orange transition-colors cursor-default">Tiger Analytics</p>
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Contact Us</h4>
+              <div className="space-y-3">
+                 <p className="text-sm text-brand-dark font-bold">+91 8939914747</p>
+                 <p className="text-sm text-brand-dark font-bold hover:text-brand-blue transition-colors cursor-pointer underline decoration-brand-blue/20 underline-offset-8">info@printone.co.in</p>
+              </div>
             </div>
-            <div className="space-y-6">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Direct Line</h4>
-              <p className="text-sm text-brand-dark font-bold hover:text-brand-blue transition-colors cursor-pointer underline decoration-brand-blue/20 underline-offset-8">hello@printone.io</p>
+            <div className="space-y-6 max-w-[250px]">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Shop</h4>
+              <p className="text-sm text-brand-dark font-bold leading-relaxed">
+                PRINTONE, No.122, Rajaji Road, West Tambaram, Chennai - 600045
+              </p>
+            </div>
+            <div className="space-y-6 flex flex-col md:items-end">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Powered by</h4>
+              <img src="/printone-logo.png" alt="Printone" className="h-12" />
             </div>
           </div>
         </div>
-        <div className="max-w-[1400px] mx-auto mt-12 pt-8 border-t border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-6">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">&copy; 2026 PrintOne Framework &bull; Built for Excellence</p>
+        <div className="max-w-[1400px] mx-auto mt-12 pt-8 border-t border-slate-50 flex flex-col sm:flex-row justify-center items-center gap-6">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">&copy; {new Date().getFullYear()} PrintOne. All Rights Reserved.</p>
           <div className="flex gap-4">
-             <div className="flex items-center gap-2 group transition-all">
+             {/* <div className="flex items-center gap-2 group transition-all">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 group-hover:scale-150 transition-transform" />
                 <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Global Ops Active</span>
-             </div>
+             </div> */}
           </div>
         </div>
       </footer>

@@ -18,7 +18,7 @@ import {
   HiOutlineChevronRight,
 } from 'react-icons/hi2'
 
-const OrderDetailsModal = ({ order, onClose, onUpdateStatus, readOnly }) => {
+const OrderDetailsModal = ({ order, kits, onClose, onUpdateStatus, readOnly }) => {
   if (!order) return null
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
@@ -46,15 +46,25 @@ const OrderDetailsModal = ({ order, onClose, onUpdateStatus, readOnly }) => {
               <section>
                 <h4 className="text-[10px] font-black text-brand-blue uppercase tracking-widest mb-6">Asset Bundle Selection</h4>
                 <div className="grid grid-cols-2 gap-3">
-                  {order.items.map((item, i) => (
-                    <div key={i} className="bg-white border border-slate-100 rounded-lg p-4 flex flex-col gap-2 shadow-sm">
-                      <p className="text-[10px] font-black text-slate-900 tracking-tight leading-tight">
-                        {item.title}
-                        {item.selectedSize && <span className="ml-2 text-brand-orange">({item.selectedSize})</span>}
-                      </p>
-                      <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Verified Kit {item.selectedSize ? `• Size ${item.selectedSize}` : ''}</span>
-                    </div>
-                  ))}
+                  {order.items.map((item, i) => {
+                    const kit = kits?.find(k => k.title === item.title);
+                    return (
+                      <div key={i} className="bg-white border border-slate-100 rounded-lg p-3 flex items-center gap-3 shadow-sm">
+                        {kit?.image ? (
+                          <img src={kit.image} alt={item.title} className="w-10 h-10 object-cover rounded-md bg-slate-50 border border-slate-100 flex-shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-md flex-shrink-0" />
+                        )}
+                        <div className="flex flex-col gap-1">
+                          <p className="text-[10px] font-black text-slate-900 tracking-tight leading-tight">
+                            {item.title}
+                            {item.selectedSize && <span className="ml-1 text-brand-orange">({item.selectedSize})</span>}
+                          </p>
+                          <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Verified Kit {item.selectedSize ? `• Size ${item.selectedSize}` : ''}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             </div>
@@ -83,16 +93,17 @@ const OrderDetailsModal = ({ order, onClose, onUpdateStatus, readOnly }) => {
                     </div>
                   </div>
                   {!readOnly && (
-                    <div className="flex gap-2">
-                       {['Pending', 'Processing', 'Dispatched', 'Delivered'].map(s => (
-                         <button 
-                           key={s}
-                           onClick={() => onUpdateStatus(order._id, s, false)} 
-                           className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border ${order.status === s ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-brand-blue hover:text-brand-blue'}`} 
-                         >
-                           {s}
-                         </button>
-                       ))}
+                    <div className="flex justify-end gap-2">
+                      <select
+                        value={order.status}
+                        onChange={(e) => onUpdateStatus(order._id, e.target.value, false)}
+                        className="bg-white border border-slate-200 text-slate-600 text-[9px] font-black uppercase tracking-widest rounded-lg px-4 py-2 outline-none focus:border-brand-blue cursor-pointer shadow-sm"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Dispatched">Dispatched</option>
+                        <option value="Delivered">Delivered</option>
+                      </select>
                     </div>
                   )}
                 </div>
@@ -161,6 +172,7 @@ const RangeDatePicker = ({ isOpen, range, onSelect, onClose }) => {
 export default function AdminDashboard({ onLogout, readOnly = false }) {
   const [orders, setOrders] = useState([])
   const [employees, setEmployees] = useState([])
+  const [kits, setKits] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [confirmingAction, setConfirmingAction] = useState(null)
@@ -177,6 +189,13 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
   useEffect(() => {
     setCurrentPage(1)
   }, [isEmployeesView, statusFilter, searchQuery, dateRange, itemsPerPage])
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/kits`)
+      .then(res => res.json())
+      .then(data => setKits(data))
+      .catch(err => console.error("Failed to load kits", err))
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -259,7 +278,7 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
 
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-sans overflow-hidden">
-      <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onUpdateStatus={updateStatus} readOnly={readOnly} />
+      <OrderDetailsModal order={selectedOrder} kits={kits} onClose={() => setSelectedOrder(null)} onUpdateStatus={updateStatus} readOnly={readOnly} />
       <ConfirmationModal isOpen={!!confirmingAction} message={`Are you sure you want to mark this bundle as ${confirmingAction?.status}? This will trigger the employee tracking notification.`} onConfirm={() => updateStatus(confirmingAction.id, confirmingAction.status, true)} onCancel={() => setConfirmingAction(null)} />
 
       {/* Modern Sidebar */}
@@ -351,7 +370,7 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-0">
                     {!isEmployeesView ? (
                       <>
-                        <StatCard label="Total Shipments" val={orders.length} icon={<HiOutlineShoppingBag />} color="blue" />
+                        <StatCard label="Total Orders" val={orders.length} icon={<HiOutlineShoppingBag />} color="blue" />
                         <StatCard label="Pending Orders" val={orders.filter(o => o.status === 'Pending').length} icon={<HiOutlineCalendar />} color="orange" />
                         <StatCard label="Live Dispatched" val={orders.filter(o => o.status === 'Dispatched').length} icon={<HiOutlineTruck />} color="green" />
                       </>
