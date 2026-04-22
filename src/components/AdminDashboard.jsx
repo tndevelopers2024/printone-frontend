@@ -13,7 +13,9 @@ import {
   HiOutlineCalendar,
   HiOutlineArrowDownTray,
   HiOutlineFunnel,
-  HiOutlineInbox
+  HiOutlineInbox,
+  HiOutlineChevronLeft,
+  HiOutlineChevronRight,
 } from 'react-icons/hi2'
 
 const OrderDetailsModal = ({ order, onClose, onUpdateStatus, readOnly }) => {
@@ -36,7 +38,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdateStatus, readOnly }) => {
                 <h4 className="text-[10px] font-black text-brand-blue uppercase tracking-widest mb-6">Employee Profile</h4>
                 <div className="bg-slate-50 rounded-lg p-6 space-y-4">
                   <div className="flex justify-between"><span className="text-xs font-bold text-slate-400">Full Name</span><span className="text-xs font-black text-slate-900">{order.employeeDetails.name}</span></div>
-                  <div className="flex justify-between"><span className="text-xs font-bold text-slate-400">Employee ID</span><span className="text-xs font-black text-slate-900 font-mono tracking-widest">{order.employeeDetails.employeeId}</span></div>
+                  <div className="flex justify-between"><span className="text-xs font-bold text-slate-400">Email Address</span><span className="text-xs font-black text-slate-900 font-mono tracking-widest">{order.employeeDetails.email}</span></div>
                   <div className="flex justify-between"><span className="text-xs font-bold text-slate-400">Work Email</span><span className="text-xs font-black text-slate-900">{order.employeeDetails.email}</span></div>
                   <div className="flex justify-between"><span className="text-xs font-bold text-slate-400">Contact</span><span className="text-xs font-black text-slate-900">{order.employeeDetails.phone}</span></div>
                 </div>
@@ -70,13 +72,28 @@ const OrderDetailsModal = ({ order, onClose, onUpdateStatus, readOnly }) => {
               </section>
               <section>
                 <h4 className="text-[10px] font-black text-brand-blue uppercase tracking-widest mb-6">Workflow Status</h4>
-                <div className={`p-6 rounded-lg border ${order.status === 'Dispatched' ? 'bg-green-50 border-green-100' : 'bg-brand-blue/5 border-brand-blue/10'} flex items-center justify-between`}>
+                <div className={`p-6 rounded-lg border bg-brand-blue/5 border-brand-blue/10 flex flex-col md:flex-row items-center justify-between gap-4`}>
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${order.status === 'Dispatched' ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20'}`}>{order.status === 'Dispatched' ? <HiOutlineCheckCircle className="text-xl" /> : <HiOutlineTruck className="text-xl" />}</div>
-                    <div><p className={`text-[10px] font-black uppercase tracking-widest ${order.status === 'Dispatched' ? 'text-green-600' : 'text-brand-blue'}`}>{order.status}</p><p className="text-[9px] font-bold text-slate-400">System Recorded</p></div>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-brand-blue text-white shadow-lg shadow-brand-blue/20">
+                      <HiOutlineTruck className="text-xl" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-brand-blue">Current: {order.status}</p>
+                      <p className="text-[9px] font-bold text-slate-400">System Recorded</p>
+                    </div>
                   </div>
-                  {order.status !== 'Dispatched' && !readOnly && (
-                    <button onClick={() => onUpdateStatus(order._id, 'Dispatched', false)} className="px-6 py-3 bg-slate-900 hover:bg-brand-orange text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg hover:shadow-brand-orange/30 active:scale-95" >Ship Order</button>
+                  {!readOnly && (
+                    <div className="flex gap-2">
+                       {['Pending', 'Processing', 'Dispatched', 'Delivered'].map(s => (
+                         <button 
+                           key={s}
+                           onClick={() => onUpdateStatus(order._id, s, false)} 
+                           className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border ${order.status === s ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-brand-blue hover:text-brand-blue'}`} 
+                         >
+                           {s}
+                         </button>
+                       ))}
+                    </div>
                   )}
                 </div>
               </section>
@@ -124,7 +141,11 @@ const RangeDatePicker = ({ isOpen, range, onSelect, onClose }) => {
   return (
     <div ref={calendarRef} className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-2xl border border-slate-100 p-6 z-[60] animate-in fade-in zoom-in-95 duration-200">
       <div className="flex items-center justify-between mb-6"><button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-2 hover:bg-slate-100 rounded-lg"><HiOutlineChevronLeft /></button><p className="text-[10px] font-black uppercase tracking-widest text-slate-900">{format(viewDate, 'MMMM yyyy')}</p><button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-2 hover:bg-slate-100 rounded-lg"><HiOutlineChevronRight /></button></div>
-      <div className="grid grid-cols-7 gap-1 mb-2">{['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="text-center text-[9px] font-black text-slate-300 py-2">{d}</div>)}</div>
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+          <div key={`${d}-${i}`} className="text-center text-[9px] font-black text-slate-300 py-2">{d}</div>
+        ))}
+      </div>
       <div className="grid grid-cols-7 gap-1">{days.map((date, i) => {
         const isSelected = (range.from && isSameDay(date, range.from)) || (range.to && isSameDay(date, range.to))
         const isInRange = range.from && range.to && isWithinInterval(date, { start: startOfDay(range.from), end: endOfDay(range.to) })
@@ -135,8 +156,7 @@ const RangeDatePicker = ({ isOpen, range, onSelect, onClose }) => {
   )
 }
 
-const HiOutlineChevronLeft = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-const HiOutlineChevronRight = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+
 
 export default function AdminDashboard({ onLogout, readOnly = false }) {
   const [orders, setOrders] = useState([])
@@ -148,9 +168,15 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
   const [statusFilter, setStatusFilter] = useState('All')
   const [dateRange, setDateRange] = useState({ from: null, to: null })
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const location = useLocation()
 
   const isEmployeesView = location.pathname.includes('/employees')
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [isEmployeesView, statusFilter, searchQuery, dateRange, itemsPerPage])
 
   useEffect(() => {
     setLoading(true)
@@ -168,7 +194,7 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
     const matchesStatus = statusFilter === 'All' ? true : order.status === statusFilter
     const matchesSearch =
       order.employeeDetails.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.employeeDetails.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.employeeDetails.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.shippingAddress.city.toLowerCase().includes(searchQuery.toLowerCase())
     let matchesDate = true
     if (dateRange.from) {
@@ -182,12 +208,16 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
 
   const filteredEmployees = employees.filter(emp =>
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.employeeId.toLowerCase().includes(searchQuery.toLowerCase())
+    emp.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const currentData = isEmployeesView ? filteredEmployees : filteredOrders
+  const totalPages = Math.ceil(currentData.length / itemsPerPage)
+  const paginatedData = currentData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   const updateStatus = async (orderId, newStatus, skipConfirm = false) => {
     if (readOnly) return
-    if (!skipConfirm && newStatus === 'Dispatched') {
+    if (!skipConfirm && (newStatus === 'Dispatched' || newStatus === 'Delivered')) {
       setConfirmingAction({ id: orderId, status: newStatus })
       return
     }
@@ -211,12 +241,12 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
   const exportCSV = () => {
     let headers, rows, filename
     if (isEmployeesView) {
-      headers = ['Name', 'EmployeeID', 'DOB', 'Company']
-      rows = filteredEmployees.map(e => [e.name, e.employeeId, e.dob, e.company])
+      headers = ['Name', 'Email', 'DOB', 'Company']
+      rows = filteredEmployees.map(e => [e.name, e.email, e.dob, e.company])
       filename = `employees_export_${format(new Date(), 'yyyy-MM-dd')}.csv`
     } else {
-      headers = ['OrderID', 'Name', 'EmployeeID', 'Status', 'Address', 'City', 'Pincode', 'Items', 'CreatedAt']
-      rows = filteredOrders.map(o => [o._id, o.employeeDetails.name, o.employeeDetails.employeeId, o.status, `"${o.shippingAddress.address}"`, o.shippingAddress.city, o.shippingAddress.pincode, `"${o.items.map(it => it.title).join(', ')}"`, new Date(o.createdAt).toLocaleDateString()])
+      headers = ['OrderID', 'Name', 'Email', 'Status', 'Address', 'City', 'Pincode', 'Items', 'CreatedAt']
+      rows = filteredOrders.map(o => [o._id, o.employeeDetails.name, o.employeeDetails.email, o.status, `"${o.shippingAddress.address}"`, o.shippingAddress.city, o.shippingAddress.pincode, `"${o.items.map(it => it.title).join(', ')}"`, new Date(o.createdAt).toLocaleDateString()])
       filename = `orders_export_${statusFilter.toLowerCase()}_${format(new Date(), 'yyyy-MM-dd')}.csv`
     }
 
@@ -228,149 +258,401 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
   const basePath = '/admin'
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 font-sans overflow-hidden">
+    <div className="flex h-screen w-full bg-[#f8fafc] font-sans overflow-hidden">
       <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onUpdateStatus={updateStatus} readOnly={readOnly} />
-      <ConfirmationModal isOpen={!!confirmingAction} message="Are you sure you want to mark this bundle as dispatched? This will trigger the employee tracking notification." onConfirm={() => updateStatus(confirmingAction.id, confirmingAction.status, true)} onCancel={() => setConfirmingAction(null)} />
+      <ConfirmationModal isOpen={!!confirmingAction} message={`Are you sure you want to mark this bundle as ${confirmingAction?.status}? This will trigger the employee tracking notification.`} onConfirm={() => updateStatus(confirmingAction.id, confirmingAction.status, true)} onCancel={() => setConfirmingAction(null)} />
 
-      <aside className="w-72 bg-slate-900 h-full flex flex-col border-r border-slate-800 shadow-2xl relative z-20">
-        <div className="p-8 pb-12">
-          <div className="mb-12"><div className="flex items-center gap-4 mb-8"><img src="/tiger.svg" alt="Tiger Analytics" className="h-8 brightness-0 invert" /><div className="h-6 w-[1px] bg-slate-700" /><img src="/printone-logo.png" alt="Printone" className="h-7" /></div></div>
-          <nav className="space-y-2">
-            {[
-              { to: basePath, label: 'Orders', icon: <HiOutlineShoppingBag />, end: true },
-              { to: `${basePath}/employees`, label: 'Employees', icon: <HiOutlineUsers /> }
-            ].map(item => (
-              <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `w-full flex items-center gap-4 px-5 py-4 rounded-lg transition-all duration-300 group ${isActive ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`} >
-                {({ isActive }) => (<><span className={`text-[19px] ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>{item.icon}</span><span className="text-[11px] font-black uppercase tracking-widest">{item.label}</span></>)}
-              </NavLink>
-            ))}
-          </nav>
+      {/* Modern Sidebar */}
+      <aside className="w-64 bg-[#0f172a] h-full flex flex-col relative z-20 overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.1)]">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+          <div className="absolute -top-24 -left-24 w-64 h-64 bg-brand-blue rounded-full blur-[120px]" />
+          <div className="absolute bottom-24 right-0 w-48 h-48 bg-brand-orange rounded-full blur-[100px]" />
         </div>
-        <div className="mt-auto p-8 border-t border-slate-800">
-          <button onClick={onLogout} className="w-full flex items-center gap-4 px-5 py-4 rounded-lg text-red-400 hover:bg-red-500/10 transition-all group" ><HiOutlineArrowLeftOnRectangle className="text-[19px] group-hover:-translate-x-1 transition-transform" /><span className="text-[11px] font-black uppercase tracking-widest">Logout</span></button>
+
+        <div className="relative h-full flex flex-col z-10">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-full w-full  flex items-center justify-center ">
+                 <img src="/tiger.svg" alt="" className="invert" />
+              </div>
+            </div>
+
+            <nav className="space-y-2">
+              {[
+                { to: basePath, label: 'Manage Orders', icon: <HiOutlineShoppingBag />, end: true },
+                { to: `${basePath}/employees`, label: 'Employees List', icon: <HiOutlineUsers /> }
+              ].map(item => (
+                <NavLink 
+                  key={item.to} 
+                  to={item.to} 
+                  end={item.end} 
+                  className={({ isActive }) => `
+                    w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-500 group relative
+                    ${isActive ? 'bg-gradient-to-r from-brand-blue to-blue-600 text-white shadow-lg shadow-brand-blue/30' : 'text-slate-400 hover:text-white hover:bg-white/5'}
+                  `}
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span className={`text-lg transition-transform group-hover:scale-110 duration-300 ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                        {item.icon}
+                      </span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">{item.label}</span>
+                      {isActive && <div className="absolute right-3 w-1 h-1 rounded-full bg-white animate-pulse" />}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+
+          <div className="mt-auto p-6">
+            <button 
+              onClick={onLogout} 
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all group border border-transparent hover:border-red-500/20 cursor-pointer"
+            >
+              <HiOutlineArrowLeftOnRectangle className="text-lg group-hover:-translate-x-1 transition-transform" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Logout</span>
+            </button>
+          </div>
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-24 bg-white border-b border-slate-200 flex items-center justify-between px-12 relative z-10 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-          <div><h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">{readOnly ? 'Tiger Analytics Portal' : ''}</h2><p className="text-xl font-extrabold text-slate-900 tracking-tight">{isEmployeesView ? 'Personnel Directory' : 'Admin Dashboard'}</p></div>
-          <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500">{readOnly ? 'TA' : 'SA'}</div>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        {/* Dynamic Header */}
+        <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-slate-200 flex items-center justify-between px-10 relative z-30">
+          <div className="flex items-center gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
+            
+            <div>
+              <p className="text-xl font-black text-slate-900 tracking-tight">
+                {isEmployeesView ? 'User Directory' : 'Admin Dashboard'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="flex flex-col items-end">
+               <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mb-1 opacity-60">powered by</span>
+               <img src="/printone-logo.png" alt="Printone" className="h-5" />
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-600 shadow-inner">
+              {readOnly ? 'TA' : 'AD'}
+            </div>
+          </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-12 scrollbar-hide">
-          <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex-1 overflow-y-auto p-8 scrollbar-hide">
+          <div className="max-w-[1700px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <Routes>
               <Route path="*" element={
                 <>
-                  {!isEmployeesView && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {[{ label: 'Total Orders', val: orders.length, color: 'brand-blue' }, { label: 'Pending', val: orders.filter(o => o.status === 'Pending').length, color: 'brand-orange' }, { label: 'Total Dispatched', val: orders.filter(o => o.status === 'Dispatched').length, color: 'brand-blue' }].map(stat => (
-                        <div key={stat.label} className="bg-white p-8 rounded-lg border border-slate-100 shadow-soft hover:scale-[1.02] transition-all cursor-default"><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">{stat.label}</p><p className={`text-4xl font-extrabold text-${stat.color} tracking-tighter`}>{stat.val}</p></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {isEmployeesView && (
-                    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                      {[{ label: 'Total Authorized', val: employees.length, color: 'brand-blue' }].map(stat => (
-                        <div key={stat.label} className="bg-white p-8 rounded-lg border border-slate-100 shadow-soft hover:scale-[1.02] transition-all cursor-default"><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">{stat.label}</p><p className={`text-4xl font-extrabold text-${stat.color} tracking-tighter`}>{stat.val}</p></div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="bg-white rounded-lg border border-slate-100 shadow-soft">
-                    <div className="px-10 py-6 border-b border-slate-50 flex flex-wrap items-center justify-between gap-6">
-                      <div className="flex items-center gap-8 flex-1 min-w-[300px]">
-                        <div className="relative flex-1 max-w-sm"><HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg" /><input type="text" placeholder={isEmployeesView ? "Search employees..." : "Search orders..."} className="w-full bg-slate-50 border-none rounded-xl pl-12 pr-4 py-3.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-brand-blue/10 transition-all placeholder:text-slate-300" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
+                  {/* Premium Stat Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-0">
+                    {!isEmployeesView ? (
+                      <>
+                        <StatCard label="Total Shipments" val={orders.length} icon={<HiOutlineShoppingBag />} color="blue" />
+                        <StatCard label="Pending Orders" val={orders.filter(o => o.status === 'Pending').length} icon={<HiOutlineCalendar />} color="orange" />
+                        <StatCard label="Live Dispatched" val={orders.filter(o => o.status === 'Dispatched').length} icon={<HiOutlineTruck />} color="green" />
+                      </>
+                    ) : (
+                      <div className='p-0 m-0'></div>
+                      // <StatCard label="Total Authorized Personnel" val={employees.length} icon={<HiOutlineUsers />} color="blue" full />
+                    )}
+                  </div>                  <div className="mt-4 bg-white rounded-xl border border-slate-100 shadow-[0_16px_32px_-8px_rgba(0,0,0,0.03)] overflow-visible relative">
+                    {/* Table Filters */}
+                    <div className="px-8 py-6 border-b border-slate-50 flex flex-wrap items-center justify-between gap-6 bg-slate-50/30">
+                      <div className="flex flex-wrap items-center gap-4 flex-1 min-w-[300px]">
+                        <div className="relative flex-1 max-w-sm group">
+                          <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within:text-brand-blue transition-colors" />
+                          <input 
+                            type="text" 
+                            placeholder={isEmployeesView ? "Search personnel..." : "Locate order..."} 
+                            className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-[11px] font-bold text-slate-700 outline-none focus:ring-4 focus:ring-brand-blue/10 focus:border-brand-blue transition-all shadow-sm" 
+                            value={searchQuery} 
+                            onChange={(e) => setSearchQuery(e.target.value)} 
+                          />
+                        </div>
 
                         {!isEmployeesView && (
-                          <>
-                            <div className="relative flex items-center gap-3">
-                              <HiOutlineFunnel className="text-slate-400 text-lg" />
-                              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-50 border-none rounded-xl px-4 py-3.5 text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:ring-2 focus:ring-brand-blue/10 appearance-none cursor-pointer pr-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1rem' }} >
-                                <option value="All">All Orders</option>
-                                <option value="Pending">Pending Only</option>
-                                <option value="Dispatched">Dispatched Only</option>
+                          <div className="flex items-center gap-3">
+                            <div className="relative group">
+                              <select 
+                                value={statusFilter} 
+                                onChange={(e) => setStatusFilter(e.target.value)} 
+                                className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-600 outline-none focus:ring-4 focus:ring-brand-blue/10 appearance-none cursor-pointer pr-10 shadow-sm"
+                                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '0.8rem' }}
+                              >
+                                <option value="All">All</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Dispatched">Dispatched</option>
+                                <option value="Delivered">Delivered</option>
                               </select>
                             </div>
-                            <div className="relative"><button onClick={() => setIsDatePickerOpen(!isDatePickerOpen)} className={`flex items-center gap-3 px-5 py-3.5 rounded-xl border transition-all cursor-pointer ${dateRange.from ? 'bg-brand-blue/5 border-brand-blue/20 text-brand-blue' : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600'}`} ><HiOutlineCalendar className="text-lg" /><span className="text-[10px] font-black uppercase tracking-widest">{dateRange.from ? `${format(dateRange.from, 'dd MMM')} ${dateRange.to ? `- ${format(dateRange.to, 'dd MMM')}` : ''}` : 'Filter by Date'}</span></button><RangeDatePicker isOpen={isDatePickerOpen} range={dateRange} onSelect={setDateRange} onClose={() => setIsDatePickerOpen(false)} /></div>
-                          </>
+                            <div className="relative">
+                              <button 
+                                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)} 
+                                className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all cursor-pointer shadow-sm ${dateRange.from ? 'bg-brand-blue text-white border-brand-blue' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                              >
+                                <HiOutlineCalendar className="text-lg" />
+                                <span className="text-[9px] font-black uppercase tracking-widest">
+                                  {dateRange.from ? `${format(dateRange.from, 'dd MMM')} ${dateRange.to ? `- ${format(dateRange.to, 'dd MMM')}` : ''}` : 'Timeframe'}
+                                </span>
+                              </button>
+                              <RangeDatePicker isOpen={isDatePickerOpen} range={dateRange} onSelect={setDateRange} onClose={() => setIsDatePickerOpen(false)} />
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <button onClick={exportCSV} className="flex items-center gap-3 px-6 py-3.5 bg-slate-900 hover:bg-brand-blue text-white rounded-xl transition-all shadow-lg hover:shadow-brand-blue/20 active:scale-95"><HiOutlineArrowDownTray className="text-lg" /><span className="text-[10px] font-black uppercase tracking-widest">Export CSV</span></button>
-                    </div>
-
+                      
+                      <div className="flex items-center gap-4">
+                        {isEmployeesView && (
+                          <div className="hidden sm:flex items-center gap-3 px-5 py-3 bg-white border border-slate-200 rounded-xl shadow-sm animate-in fade-in slide-in-from-right-4 duration-500">
+                             <div className="w-1.5 h-1.5 rounded-full bg-brand-blue animate-pulse" />
+                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Authorized Count</span>
+                             <div className="h-4 w-[1px] bg-slate-100 mx-1" />
+                             <span className="text-sm font-black text-slate-900 tracking-tight">{employees.length}</span>
+                          </div>
+                        )}
+                        <button 
+                          onClick={exportCSV} 
+                          className="flex items-center gap-3 px-6 py-3 bg-[#0f172a] hover:bg-brand-blue text-white rounded-xl transition-all shadow-lg shadow-slate-900/10 active:scale-95 group"
+                        >
+                          <HiOutlineArrowDownTray className="text-lg group-hover:translate-y-0.5 transition-transform" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">Export Data</span>
+                        </button>
+                      </div>
+                    </div>                    {/* Table View */}
                     {loading ? (
-                      <div className="py-32 flex flex-col items-center justify-center gap-4"><div className="w-8 h-8 border-2 border-slate-100 border-t-brand-blue rounded-full animate-spin" /><p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Streaming Ledger...</p></div>
-                    ) : (isEmployeesView ? filteredEmployees : filteredOrders).length === 0 ? (
-                      <div className="py-32 flex flex-col items-center justify-center gap-4 text-slate-200">
-                        <HiOutlineInbox className="text-6xl text-slate-500" />
-                        <p className="text-xs text-slate-400 font-black uppercase tracking-widest">No Results Encountered</p>
+                      <div className="py-24 flex flex-col items-center justify-center gap-4">
+                        <div className="w-10 h-10 border-2 border-slate-100 border-t-brand-blue rounded-full animate-spin" />
+                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Updating Ledger...</p>
+                      </div>
+                    ) : currentData.length === 0 ? (
+                      <div className="py-24 flex flex-col items-center justify-center gap-4 text-slate-200">
+                        <HiOutlineInbox className="text-4xl text-slate-200" />
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">No matching records</p>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto rounded-b-lg overflow-hidden">
-                        <table className="w-full text-left">
-                          <thead className="bg-slate-50/50">
-                            <tr className="text-[9px] text-slate-400 font-black uppercase tracking-[0.4em] border-b border-slate-100">
-                              {isEmployeesView ? (
-                                <>
-                                  <th className="px-10 py-6">Employee Name</th>
-                                  <th className="px-10 py-6">Personal ID</th>
-                                  <th className="px-10 py-6">Date of Birth</th>
-                                  <th className="px-10 py-6 text-right">Company</th>
-                                </>
-                              ) : (
-                                <>
-                                  <th className="px-10 py-6">Subject / ID</th>
-                                  <th className="px-10 py-6">Items</th>
-                                  <th className="px-10 py-6">Address</th>
-                                  <th className="px-10 py-6 text-center">{readOnly ? 'Details' : 'Actions'}</th>
-                                  <th className="px-10 py-6 text-right">Timestamp</th>
-                                </>
-                              )}
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-50">
-                            {isEmployeesView ? filteredEmployees.map(emp => (
-                              <tr key={emp._id} className="hover:bg-slate-50/30 transition-colors">
-                                <td className="px-10 py-8"><p className="font-extrabold text-slate-900 text-[13px]">{emp.name}</p></td>
-                                <td className="px-10 py-8"><p className="text-[10px] font-black text-brand-blue uppercase tracking-widest font-mono">{emp.employeeId}</p></td>
-                                <td className="px-10 py-8"><p className="text-xs font-bold text-slate-500">{emp.dob ? format(new Date(emp.dob), 'dd/MM/yyyy') : 'N/A'}</p></td>
-                                <td className="px-10 py-8 text-right"><span className="px-3 py-1 bg-brand-blue/5 text-brand-blue rounded-lg text-[9px] font-black uppercase tracking-widest">{emp.company}</span></td>
+                      <>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="text-[8px] text-slate-400 font-black uppercase tracking-[0.3em] border-b border-slate-50">
+                                {isEmployeesView ? (
+                                  <>
+                                    <th className="px-8 py-5">Identification</th>
+                                    <th className="px-8 py-5">Credentials</th>
+                                    <th className="px-8 py-5">Timeline</th>
+                                    <th className="px-8 py-5 text-right">Affiliation</th>
+                                  </>
+                                ) : (
+                                  <>
+                                    <th className="px-8 py-5">Profile</th>
+                                    <th className="px-8 py-5">Items</th>
+                                    <th className="px-8 py-5">Address</th>
+                                    <th className="px-8 py-5 text-center">Action</th>
+                                    <th className="px-8 py-5 text-right">Date</th>
+                                  </>
+                                )}
                               </tr>
-                            )) : filteredOrders.map(order => (
-                              <tr key={order._id} className="hover:bg-slate-50/30 transition-colors group">
-                                <td className="px-10 py-8"><p className="font-extrabold text-slate-900 text-[13px]">{order.employeeDetails.name}</p><p className="text-[10px] font-black text-brand-blue uppercase tracking-widest opacity-60 mt-1">{order.employeeDetails.employeeId}</p></td>
-                                <td className="px-10 py-8"><div className="flex flex-wrap gap-2">{order.items.slice(0, 2).map((it, i) => (<span key={i} className="px-3 py-1 bg-slate-100 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-widest">{it.title}</span>))}{order.items.length > 2 && <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">+{order.items.length - 2} Items</span>}</div></td>
-                                <td className="px-10 py-8"><p className="text-[11px] font-bold text-slate-700">{order.shippingAddress.city}</p><p className="text-[9px] text-slate-400 line-clamp-1">{order.shippingAddress.address}</p></td>
-                                <td className="px-10 py-8">
-                                  <div className="flex items-center justify-center gap-3">
-                                    <button onClick={() => setSelectedOrder(order)} className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-brand-blue rounded-lg transition-all shadow-sm border border-slate-100" title="View Details" ><HiOutlineEye className="text-lg" /></button>
-                                    {readOnly ? (
-                                      <div className={`p-3 rounded-lg shadow-sm border ${order.status === 'Dispatched' ? 'bg-green-50 text-green-500 border-green-100' : 'bg-brand-blue/5 text-brand-blue border-brand-blue/10'}`} title={order.status === 'Dispatched' ? 'Dispatched' : 'Pending'}>
-                                        {order.status === 'Dispatched' ? <HiOutlineCheckCircle className="text-lg" /> : <HiOutlineTruck className="text-lg" />}
-                                      </div>
-                                    ) : (
-                                      <button onClick={() => updateStatus(order._id, order.status === 'Dispatched' ? 'Pending' : 'Dispatched')} className={`p-3 rounded-lg transition-all shadow-sm border ${order.status === 'Dispatched' ? 'bg-green-50 text-green-500 border-green-100' : 'bg-brand-blue/5 text-brand-blue border-brand-blue/10'}`} title={order.status === 'Dispatched' ? 'Undo Dispatch' : 'Mark as Dispatched'}>
-                                        {order.status === 'Dispatched' ? <HiOutlineCheckCircle className="text-lg" /> : <HiOutlineTruck className="text-lg" />}
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                              {isEmployeesView ? paginatedData.map((emp, idx) => (
+                                <tr key={emp._id} className="hover:bg-slate-50/50 transition-all duration-300 group">
+                                  <td className="px-8 py-4">
+                                     <div className="flex items-center gap-3">
+                                       <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 group-hover:bg-brand-blue group-hover:text-white transition-all">
+                                         {emp.name.charAt(0)}
+                                       </div>
+                                       <p className="font-extrabold text-slate-900 text-xs tracking-tight">{emp.name}</p>
+                                     </div>
+                                  </td>
+                                  <td className="px-8 py-4">
+                                    <span className="font-bold text-[10px]">
+                                      {emp.email}
+                                    </span>
+                                  </td>
+                                  <td className="px-8 py-4">
+                                    <div className="flex items-center gap-2 text-slate-500">
+                                      <HiOutlineCalendar className="text-base opacity-40" />
+                                      <span className="text-[11px] font-bold">{emp.dob ? format(new Date(emp.dob), 'MMM dd, yyyy') : '---'}</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-8 py-4 text-right">
+                                    <span className="px-3 py-1.5 bg-brand-blue/5 text-brand-blue rounded-lg text-[8px] font-black uppercase tracking-widest border border-brand-blue/10">
+                                      {emp.company}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )) : paginatedData.map((order, idx) => (
+                                <tr key={order._id} className="hover:bg-slate-50/50 transition-all duration-300 group">
+                                  <td className="px-8 py-4">
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 group-hover:bg-brand-blue group-hover:text-white transition-all">
+                                         {order.employeeDetails.name.charAt(0)}
+                                       </div>
+                                       <div>
+                                         <p className="font-extrabold text-slate-900 text-xs tracking-tight">{order.employeeDetails.name}</p>
+                                         <p className="text-[10px] font-black text-gray-500">{order.employeeDetails.email}</p>
+                                       </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-8 py-4">
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {order.items.slice(0, 2).map((it, i) => (
+                                        <span key={i} className="px-2 py-1 bg-white border border-slate-100 rounded-md text-[8px] font-black text-slate-500 uppercase tracking-widest shadow-sm">
+                                          {it.title}
+                                        </span>
+                                      ))}
+                                      {order.items.length > 2 && (
+                                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest self-center">
+                                          +{order.items.length - 2}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="px-8 py-4">
+                                    <div className="max-w-[180px]">
+                                      <p className="text-[10px] font-bold text-slate-800 leading-none mb-0.5">{order.shippingAddress.city}</p>
+                                      <p className="text-[8px] text-slate-400 line-clamp-1 font-medium">{order.shippingAddress.address}</p>
+                                    </div>
+                                  </td>
+                                  <td className="px-8 py-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button 
+                                        onClick={() => setSelectedOrder(order)} 
+                                        className="w-9 h-9 bg-white hover:bg-brand-blue text-slate-400 hover:text-white rounded-lg transition-all shadow-sm border border-slate-100 flex items-center justify-center" 
+                                        title="Inspect Details"
+                                      >
+                                        <HiOutlineEye className="text-lg" />
                                       </button>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-10 py-8 text-right"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString()}</p></td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
+                                      {!readOnly && (
+                                        <select
+                                          value={order.status}
+                                          onChange={(e) => updateStatus(order._id, e.target.value)}
+                                          className="bg-white border border-slate-200 text-slate-600 text-[9px] font-black uppercase tracking-widest rounded-lg px-2 py-2 outline-none focus:border-brand-blue cursor-pointer shadow-sm"
+                                        >
+                                          <option value="Pending">Pending</option>
+                                          <option value="Processing">Processing</option>
+                                          <option value="Dispatched">Dispatched</option>
+                                          <option value="Delivered">Delivered</option>
+                                        </select>
+                                      )}
+                                      {readOnly && (
+                                        <span className="px-2 py-1 bg-brand-blue/5 text-brand-blue rounded border border-brand-blue/10 text-[9px] font-black uppercase tracking-widest">
+                                          {order.status}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="px-8 py-4 text-right">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                      {format(new Date(order.createdAt), 'MMM dd, yyyy')}
+                                    </p>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Pagination Footer */}
+                        <div className="px-8 py-4 border-t border-slate-50 flex flex-wrap items-center justify-between gap-4 bg-white">
+                          <div className="flex items-center gap-6">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                              Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, currentData.length)} of {currentData.length} records
+                            </p>
+                            <div className="h-4 w-[1px] bg-slate-100" />
+                            <div className="flex items-center gap-3">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Display</span>
+                              <select 
+                                value={itemsPerPage} 
+                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                className="bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-600 outline-none focus:ring-2 focus:ring-brand-blue/10 cursor-pointer transition-all"
+                              >
+                                {[5, 10, 20, 50].map(val => (
+                                  <option key={val} value={val}>{val} per page</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button 
+                              disabled={currentPage === 1}
+                              onClick={() => setCurrentPage(prev => prev - 1)}
+                              className="w-8 h-8 rounded-lg border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                              <HiOutlineChevronLeft className="text-sm" />
+                            </button>
+                            <div className="flex items-center gap-1">
+                              {[...Array(totalPages)].map((_, i) => {
+                                const page = i + 1
+                                // Show first, last, and pages around current
+                                if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                                  return (
+                                    <button 
+                                      key={page}
+                                      onClick={() => setCurrentPage(page)}
+                                      className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${currentPage === page ? 'bg-brand-blue text-white shadow-md shadow-brand-blue/20' : 'text-slate-400 hover:bg-slate-50'}`}
+                                    >
+                                      {page}
+                                    </button>
+                                  )
+                                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                  return <span key={page} className="text-slate-200 px-1 text-[10px]">...</span>
+                                }
+                                return null
+                              })}
+                            </div>
+                            <button 
+                              disabled={currentPage === totalPages}
+                              onClick={() => setCurrentPage(prev => prev + 1)}
+                              className="w-8 h-8 rounded-lg border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                              <HiOutlineChevronRight className="text-sm" />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )
+                  }  </div>
                 </>
               } />
             </Routes>
           </div>
         </div>
       </main>
+    </div>
+  )
+}
+
+function StatCard({ label, val, icon, color, full }) {
+  const themes = {
+    blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100', progress: 'bg-blue-600' },
+    orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100', progress: 'bg-orange-600' },
+    green: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100', progress: 'bg-emerald-600' },
+    purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-100', progress: 'bg-purple-600' }
+  }
+  
+  const theme = themes[color]
+  
+  return (
+    <div className={`bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-500 group cursor-default ${full ? 'col-span-full' : ''}`}>
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-xl ${theme.bg} ${theme.text} flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500 border ${theme.border}`}>
+          {icon}
+        </div>
+        <div>
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">{label}</p>
+          <p className="text-2xl font-black text-slate-900 tracking-tighter leading-none">{val}</p>
+        </div>
+      </div>
+      <div className="mt-4 h-1 w-full bg-slate-50 rounded-full overflow-hidden">
+         <div className={`h-full ${theme.progress} opacity-20 w-2/3 rounded-full`} />
+      </div>
     </div>
   )
 }

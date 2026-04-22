@@ -3,7 +3,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, en
 import { HiOutlineCalendar, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2'
 
 export default function Verify({ onVerified }) {
-  const [formData, setFormData] = useState({ name: '', employeeId: '', dob: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', dob: '' })
   const [error, setError] = useState('')
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [viewDate, setViewDate] = useState(new Date())
@@ -59,14 +59,25 @@ export default function Verify({ onVerified }) {
     }
 
     try {
+      const sanitizedData = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        dob: formData.dob
+      }
+      
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(sanitizedData)
       })
       const data = await res.json()
+      console.log('Verify API Response:', data)
       if (data.success) {
-        onVerified(data.employee)
+        if (data.hasOrder) {
+          onVerified(data.employee, data.order)
+        } else {
+          onVerified(data.employee)
+        }
       } else {
         setError(data.message || 'Verification failed')
       }
@@ -95,7 +106,7 @@ export default function Verify({ onVerified }) {
 
     return (
       <>
-        <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col gap-4 ">
           <div className="flex items-center justify-between">
             <button 
               type="button"
@@ -192,14 +203,14 @@ export default function Verify({ onVerified }) {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Employee ID</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Address</label>
                 <input 
-                  type="text" 
-                  placeholder="TA-00000"
+                  type="email" 
+                  placeholder="Email ID"
                   required
                   className="w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue outline-none transition-all placeholder:text-slate-300 font-bold"
-                  value={formData.employeeId}
-                  onChange={e => setFormData({ ...formData, employeeId: e.target.value })}
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div className="relative" ref={calendarRef}>

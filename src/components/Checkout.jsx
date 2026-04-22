@@ -37,7 +37,6 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
     const orderData = {
       employeeDetails: {
         name: employee.name,
-        employeeId: employee.employeeId,
         email: formData.email,
         phone: formData.phone
       },
@@ -228,8 +227,8 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                 <span className="font-black text-slate-900 tracking-tight">{employee.name}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-400">ID Credentials</span>
-                <span className="font-black text-slate-900 tracking-tight">{employee.employeeId}</span>
+                <span className="font-bold text-slate-400">Verified Email</span>
+                <span className="font-black text-slate-900 tracking-tight">{employee.email}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-slate-400">Status</span>
