@@ -235,6 +235,20 @@ export default function Tracking({ employee }) {
                   {order.shippingAddress.pincode}
                 </span>
               </div>
+              {order.trackingLink && (
+                <div className="mt-8 pt-6 border-t border-slate-100 flex justify-center md:justify-start">
+                  <button 
+                    onClick={() => {
+                      const url = order.trackingLink.startsWith('http') ? order.trackingLink : `https://${order.trackingLink}`;
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }}
+                    className="cursor-pointer flex items-center gap-3 bg-brand-blue text-white text-[10px] font-black uppercase tracking-[0.2em] px-8 py-4 rounded-2xl hover:bg-brand-blue/90 transition-all shadow-xl shadow-brand-blue/20 active:scale-95 group"
+                  >
+                    <HiOutlineTruck className="text-xl group-hover:translate-x-1 transition-transform" />
+                    Track Your Bundle
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
