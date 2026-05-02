@@ -214,9 +214,21 @@ export default function Tracking({ employee }) {
         {/* Right Column: Digital Receipt Style */}
         <div className="lg:col-span-7 flex flex-col gap-8">
           
-          {/* Shipping Card */}
           <div className="bg-white rounded-[40px] p-8 md:p-10 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col md:flex-row gap-8 items-center relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -z-0 transition-transform duration-500 group-hover:scale-110" />
+            
+            {order.trackingLink && (
+              <button 
+                onClick={() => {
+                  const url = order.trackingLink.startsWith('http') ? order.trackingLink : `https://${order.trackingLink}`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+                className="absolute top-8 right-8 z-20 cursor-pointer flex items-center gap-2.5 bg-brand-blue text-white text-[9px] font-black uppercase tracking-widest px-5 py-3.5 rounded-xl hover:bg-brand-blue/90 transition-all shadow-lg active:scale-95 group"
+              >
+                <HiOutlineTruck className="text-lg group-hover:translate-x-0.5 transition-transform" />
+                Track Bundle
+              </button>
+            )}
             
             <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-brand-blue flex-shrink-0 relative z-10 border border-slate-100 shadow-inner">
               <HiOutlineMapPin className="text-3xl" />
@@ -235,20 +247,6 @@ export default function Tracking({ employee }) {
                   {order.shippingAddress.pincode}
                 </span>
               </div>
-              {order.trackingLink && (
-                <div className="mt-8 pt-6 border-t border-slate-100 flex justify-center md:justify-start">
-                  <button 
-                    onClick={() => {
-                      const url = order.trackingLink.startsWith('http') ? order.trackingLink : `https://${order.trackingLink}`;
-                      window.open(url, '_blank', 'noopener,noreferrer');
-                    }}
-                    className="cursor-pointer flex items-center gap-3 bg-brand-blue text-white text-[10px] font-black uppercase tracking-[0.2em] px-8 py-4 rounded-2xl hover:bg-brand-blue/90 transition-all shadow-xl shadow-brand-blue/20 active:scale-95 group"
-                  >
-                    <HiOutlineTruck className="text-xl group-hover:translate-x-1 transition-transform" />
-                    Track Your Bundle
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
