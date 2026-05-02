@@ -7,6 +7,7 @@ import Checkout from './components/Checkout'
 import AdminDashboard from './components/AdminDashboard'
 import AdminLogin from './components/AdminLogin'
 import Tracking from './components/Tracking'
+import ConfirmationResult from './components/ConfirmationResult'
 
 const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
   <div className="min-h-screen bg-brand-light text-brand-dark selection:bg-brand-blue/10 overflow-x-hidden w-full font-sans">
@@ -228,6 +229,7 @@ function App() {
         <Route path="/catalog" element={employee ? <MainLayout onReset={reset} onNavigate={navigate}><div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><Catalog onSelect={toggleKit} selectedKits={selectedKits} onCheckout={() => navigate('/checkout')} /></div></MainLayout> : <Navigate to="/" />} />
         <Route path="/checkout" element={employee && selectedKits.length > 0 ? <MainLayout onReset={reset} onNavigate={navigate}><Checkout selectedKits={selectedKits} employee={employee} onOrderPlaced={handleOrderPlaced} /></MainLayout> : <Navigate to="/" />} />
         <Route path="/track" element={employee ? <MainLayout onReset={reset} onNavigate={navigate}><Tracking employee={employee} /></MainLayout> : <Navigate to="/" />} />
+        <Route path="/confirmation-result" element={<MainLayout hideNavFooter onReset={reset} onNavigate={navigate}><ConfirmationResult /></MainLayout>} />
         
         {/* Unified Admin/Viewer Route */}
         <Route path="/admin/*" element={

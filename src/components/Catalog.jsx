@@ -100,7 +100,9 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
           
           {/* Size Overlay for T-shirts */}
           {isTshirt && (
-            <div className="absolute inset-x-0 bottom-0 p-3 bg-white/80 backdrop-blur-md border-t border-white/20 transform translate-y-full group-hover:translate-y-0 is-selected:translate-y-0 transition-transform duration-500 z-20">
+            <div className={`absolute inset-x-0 bottom-0 p-3 bg-white/80 backdrop-blur-md border-t border-white/20 transform transition-transform duration-500 z-20 ${
+              currentSelectedSize ? 'translate-y-0' : 'translate-y-0 md:translate-y-full md:group-hover:translate-y-0'
+            }`}>
                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2 text-center">Quick Size Select</p>
                <div className="flex justify-center gap-1.5">
                 {sizes.map(size => (
@@ -133,10 +135,20 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
         </div>
 
         {/* Info Section */}
-        <div className="p-5 flex items-center justify-center bg-white">
+        <div className="p-5 flex flex-col items-center justify-center bg-white border-t border-slate-50">
           <h4 className="text-sm font-extrabold text-slate-900 tracking-tight text-center group-hover:text-brand-blue transition-colors">
             {kit.title}
           </h4>
+          {isSelected && (!isTshirt || currentSelectedSize) && (
+            <span className="mt-2 text-[10px] font-black text-brand-blue uppercase tracking-widest animate-in fade-in slide-in-from-top-2">
+              SELECTED
+            </span>
+          )}
+          {isTshirt && !currentSelectedSize && (
+            <span className="mt-2 text-[9px] font-black text-brand-orange uppercase tracking-widest animate-pulse">
+              Please select the size
+            </span>
+          )}
         </div>
       </div>
     )

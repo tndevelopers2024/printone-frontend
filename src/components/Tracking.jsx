@@ -17,7 +17,7 @@ export default function Tracking({ employee }) {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/track?name=${encodeURIComponent(employee.name)}&email=${encodeURIComponent(employee.email)}`)
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/track?name=${encodeURIComponent(employee.name)}`)
         const data = await res.json()
         if (data.success) {
           setOrder(data.order)
@@ -60,9 +60,25 @@ export default function Tracking({ employee }) {
     )
   }
 
-  const currentStepIndex = TRACKING_STEPS.findIndex(s => s.id === order.status)
-  const activeIndex = currentStepIndex >= 0 ? currentStepIndex : 0
+  const getActiveIndex = () => {
+    if (order.isDelivered) return 3 // 'Delivered' index
+    const index = TRACKING_STEPS.findIndex(s => s.id === order.status)
+    return index >= 0 ? index : 0
+  }
+
+  const activeIndex = getActiveIndex()
   const progressPercentage = (activeIndex / (TRACKING_STEPS.length - 1)) * 100
+
+  // Helper to get date for a specific status
+  const getStepDate = (statusId) => {
+    if (!order.statusHistory) return null
+    // Find the latest history entry for this status
+    const history = [...order.statusHistory].reverse().find(h => h.status === statusId)
+    if (history) return format(new Date(history.updatedAt), 'MMM dd, yyyy')
+    // Fallback for Pending (initial creation)
+    if (statusId === 'Pending') return format(new Date(order.createdAt), 'MMM dd, yyyy')
+    return null
+  }
 
   return (
     <div className="max-w-[1200px] mx-auto animate-in fade-in slide-in-from-bottom-12 duration-1000 px-4 md:px-8 mt-4 mb-24">
@@ -88,34 +104,31 @@ export default function Tracking({ employee }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* Left Column: Vertical Modern Timeline */}
-        <div className="lg:col-span-5 relative">
-          <div className="bg-slate-900 rounded-[40px] p-10 md:p-12 shadow-2xl relative overflow-hidden h-full">
-            {/* Ambient Background Glows */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-blue/30 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/3" />
-            
-            <div className="relative z-10">
-              <h3 className="text-white text-2xl font-black tracking-tight mb-12 flex items-center justify-between">
+        <div className="lg:col-span-5 h-full">
+           <div className="bg-[#0f172a] rounded-[40px] p-10 h-full relative overflow-hidden shadow-2xl border border-white/5">
+              {/* Premium Background Accent */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-brand-orange/20 rounded-full blur-[80px] z-0" />
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-brand-blue/30 rounded-full blur-[80px] z-0" />
+
+              <h3 className="text-white text-2xl font-black tracking-tight mb-12 flex items-center justify-between relative z-10">
                 Workflow
-                <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-                  {format(new Date(order.createdAt), 'MMM dd, yyyy')}
-                </span>
+                <div className="flex flex-col items-end">
+                   <span className="text-[7px] font-black uppercase tracking-[0.3em] text-brand-orange mb-1">Created on</span>
+                   <span className="text-[9px] uppercase tracking-widest text-white/60 font-bold">
+                     {format(new Date(order.createdAt), 'MMM dd, yyyy')}
+                   </span>
+                </div>
               </h3>
 
-              <div className="relative">
+              <div className="relative z-10">
                 <div className="space-y-12">
                   {TRACKING_STEPS.map((step, idx) => {
                     const isFinalStep = idx === TRACKING_STEPS.length - 1
-                    const isOrderDelivered = activeIndex === TRACKING_STEPS.length - 1
-                    
-                    const isCompleted = idx < activeIndex || (isOrderDelivered && isFinalStep)
-                    const isActive = idx === activeIndex && !isOrderDelivered
+                    const isCompleted = idx < activeIndex || (activeIndex === TRACKING_STEPS.length - 1 && isFinalStep)
+                    const isActive = idx === activeIndex && !order.isDelivered
                     const isPending = idx > activeIndex
 
-                    const hasSolidLine = isOrderDelivered || activeIndex > idx + 1;
-                    const hasGradientLine = !isOrderDelivered && activeIndex === idx + 1;
+                    const stepDate = getStepDate(step.id)
 
                     return (
                       <div key={step.id} className="relative flex items-start gap-8 group">
@@ -127,9 +140,9 @@ export default function Tracking({ employee }) {
                             <div className="absolute left-7 top-7 w-[2px] bg-white/10 z-0" style={{ height: 'calc(100% + 3rem)' }} />
                             
                             {/* Active Fill Line */}
-                            {(hasSolidLine || hasGradientLine) && (
+                            {(isCompleted || isActive) && (
                               <div 
-                                className={`absolute left-7 top-7 w-[2px] z-0 ${hasSolidLine ? 'bg-brand-orange' : 'bg-gradient-to-b from-brand-orange to-brand-blue'}`} 
+                                className={`absolute left-7 top-7 w-[2px] z-0 ${isCompleted ? 'bg-brand-orange' : 'bg-gradient-to-b from-brand-orange to-white/5'}`} 
                                 style={{ height: 'calc(100% + 3rem)' }} 
                               />
                             )}
@@ -150,9 +163,14 @@ export default function Tracking({ employee }) {
 
                         {/* Step Details */}
                         <div className="pt-2 flex-1">
-                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 transition-colors duration-500 ${isActive ? 'text-brand-orange' : isCompleted ? 'text-brand-orange' : 'text-slate-600'}`}>
-                            {isActive ? 'Current Phase' : (isCompleted && isFinalStep) ? 'Mission Accomplished' : isCompleted ? 'Phase Cleared' : 'Awaiting Phase'}
-                          </p>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className={`text-[10px] font-black uppercase tracking-widest transition-colors duration-500 ${isActive ? 'text-brand-orange' : isCompleted ? 'text-brand-orange' : 'text-slate-600'}`}>
+                              {isActive ? 'Current Phase' : isCompleted ? 'Phase Cleared' : 'Awaiting Phase'}
+                            </p>
+                            {stepDate && (
+                              <span className="text-[12px] font-bold text-slate-200 font-mono tracking-tighter opacity-80">{stepDate}</span>
+                            )}
+                          </div>
                           <h4 className={`text-xl font-extrabold tracking-tight mb-2 transition-colors duration-500 ${isActive || isCompleted ? 'text-white' : 'text-slate-500'}`}>
                             {step.label}
                           </h4>
@@ -165,8 +183,32 @@ export default function Tracking({ employee }) {
                   })}
                 </div>
               </div>
+           </div>
+          {/* Delivery Verification Section */}
+          {order.status === 'Dispatched' && !order.isDelivered && (
+            <div className="mt-8 bg-gradient-to-br from-brand-blue to-blue-700 rounded-[40px] p-8 text-white shadow-xl shadow-blue-200/50 animate-in slide-in-from-left-8 duration-1000 delay-300">
+              <div className="flex flex-col items-center text-center gap-6">
+                <div>
+                  <h3 className="text-xl font-black tracking-tight mb-2">Received your kit?</h3>
+                  <p className="text-blue-100 text-xs font-medium">Please confirm if your gear arrived safely.</p>
+                </div>
+                <div className="flex gap-3 w-full">
+                   <button 
+                     onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/orders/public-confirm/${order._id}/yes`}
+                     className="flex-1 px-4 py-3 bg-white text-brand-blue font-black rounded-xl text-[9px] uppercase tracking-widest shadow-lg hover:bg-blue-50 transition-all active:scale-95"
+                   >
+                     Yes, Received
+                   </button>
+                   <button 
+                     onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/orders/public-confirm/${order._id}/no`}
+                     className="flex-1 px-4 py-3 bg-blue-600/30 text-white border border-blue-400/30 font-black rounded-xl text-[9px] uppercase tracking-widest hover:bg-blue-600/50 transition-all active:scale-95"
+                   >
+                     Not Yet
+                   </button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Right Column: Digital Receipt Style */}
@@ -232,5 +274,6 @@ export default function Tracking({ employee }) {
         </div>
       </div>
     </div>
+
   )
 }

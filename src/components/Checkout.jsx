@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { HiOutlineEnvelope, HiOutlinePhone, HiOutlineHome, HiOutlineMapPin, HiOutlineBuildingOffice } from 'react-icons/hi2'
 
 const InputField = ({ label, icon, ...props }) => (
@@ -7,7 +8,7 @@ const InputField = ({ label, icon, ...props }) => (
     <div className="relative group transition-all">
       <input 
         {...props}
-        className="w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all placeholder:text-slate-300 font-bold text-slate-700 shadow-sm"
+        className={`w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all placeholder:text-slate-300 font-bold text-slate-700 shadow-sm ${props.readOnly ? 'bg-slate-50 cursor-not-allowed text-slate-400' : ''}`}
       />
       {icon && (
         <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-blue transition-colors">
@@ -19,20 +20,36 @@ const InputField = ({ label, icon, ...props }) => (
 )
 
 export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
+  const [deliveryMethod, setDeliveryMethod] = useState('Home Delivery') // 'Home Delivery' or 'Collect in Person'
+  const [selectedBranch, setSelectedBranch] = useState('')
   const [formData, setFormData] = useState({
-    email: '',
+    email: employee.email || '',
     phone: '',
-    doorNo: '',
-    street: '',
-    address: '',
-    city: '',
-    pincode: ''
+    doorNo: employee.doorNo || '',
+    street: employee.street || '',
+    address: employee.address || '',
+    city: employee.city || '',
+    pincode: employee.pincode || ''
   })
   const [loading, setLoading] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const handlePlaceOrderClick = (e) => {
     e.preventDefault()
+    if (deliveryMethod === 'Collect in Person' && !selectedBranch) {
+      alert('Please select an office branch for collection.')
+      return
+    }
+    if (!formData.phone) {
+      alert('Please provide a primary phone number.')
+      return
+    }
+    setShowConfirm(true)
+  }
+
+  const handleFinalSubmit = async () => {
     setLoading(true)
+    setShowConfirm(false)
     
     const orderData = {
       employeeDetails: {
@@ -40,14 +57,25 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
         email: formData.email,
         phone: formData.phone
       },
-      shippingAddress: {
+      deliveryMethod,
+      shippingAddress: deliveryMethod === 'Collect in Person' ? {
+        doorNo: 'Office',
+        street: selectedBranch,
+        address: `Tiger Analytics Office - ${selectedBranch} Branch`,
+        city: selectedBranch,
+        pincode: 'Pickup'
+      } : {
         doorNo: formData.doorNo,
         street: formData.street,
         address: formData.address,
         city: formData.city,
         pincode: formData.pincode
       },
-      items: selectedKits.map(k => ({ kitId: k._id, title: k.title }))
+      items: selectedKits.map(k => ({ 
+        kitId: k._id, 
+        title: k.title,
+        selectedSize: k.selectedSize
+      }))
     }
 
     try {
@@ -77,7 +105,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
         <h2 className="text-5xl font-extrabold mb-3 tracking-tighter text-slate-900 leading-tight">Checkout</h2>
         <p className="text-slate-500 text-lg font-medium mb-6 max-w-md">Finalize your destination for the premium onboarding collection.</p>
         
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handlePlaceOrderClick} className="space-y-8">
           <div className="space-y-6">
             <section className="space-y-6 p-6 bg-slate-50/50 rounded-[28px] border border-slate-100">
               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-6 flex items-center gap-4">
@@ -108,62 +136,114 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
             </section>
 
             <section className="space-y-6 p-6 bg-slate-50/50 rounded-[28px] border border-slate-100">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-6 flex items-center gap-4">
-                <span className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-[8px]">02</span>
-                Shipping Matrix
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <InputField 
-                  label="Door / Block No."
-                  type="text" required
-                  placeholder="Door / Block No."
-                  icon={<HiOutlineHome />}
-                  value={formData.doorNo}
-                  onChange={e => setFormData({ ...formData, doorNo: e.target.value })}
-                />
-                <div className="md:col-span-2">
-                  <InputField 
-                    label="Street / Residency Name"
-                    type="text" required
-                    placeholder="Street / Residency Name"
-                    icon={<HiOutlineMapPin />}
-                    value={formData.street}
-                    onChange={e => setFormData({ ...formData, street: e.target.value })}
-                  />
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] flex items-center gap-4">
+                  <span className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-[8px]">02</span>
+                  Delivery Method
+                </h4>
+                
+                <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm self-start md:self-auto">
+                  {['Home Delivery', 'Collect in Person'].map(method => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setDeliveryMethod(method)}
+                      className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${deliveryMethod === method ? 'bg-brand-blue text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      {method}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Complete Address</label>
-                <textarea 
-                  required rows="3"
-                  placeholder="Full address with landmarks for delivery team..."
-                  className="w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-slate-700 shadow-sm"
-                  value={formData.address}
-                  onChange={e => setFormData({ ...formData, address: e.target.value })}
-                ></textarea>
-              </div>
+              {deliveryMethod === 'Home Delivery' ? (
+                <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <InputField 
+                      label="Door / Block No."
+                      type="text" required={deliveryMethod === 'Home Delivery'}
+                      placeholder="Door / Block No."
+                      icon={<HiOutlineHome />}
+                      value={formData.doorNo}
+                      readOnly
+                      onChange={e => setFormData({ ...formData, doorNo: e.target.value })}
+                    />
+                    <div className="md:col-span-2">
+                      <InputField 
+                        label="Street / Residency Name"
+                        type="text" required={deliveryMethod === 'Home Delivery'}
+                        placeholder="Street / Residency Name"
+                        icon={<HiOutlineMapPin />}
+                        value={formData.street}
+                        readOnly
+                        onChange={e => setFormData({ ...formData, street: e.target.value })}
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <InputField 
-                  label="City"
-                  type="text" required
-                  placeholder="City"
-                  icon={<HiOutlineBuildingOffice />}
-                  value={formData.city}
-                  onChange={e => setFormData({ ...formData, city: e.target.value })}
-                />
-                <InputField 
-                  label="Pincode"
-                  type="text" required
-                  placeholder="000 000"
-                  value={formData.pincode}
-                  onChange={e => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 6)
-                    setFormData({ ...formData, pincode: val })
-                  }}
-                />
-              </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Complete Address</label>
+                    <textarea 
+                      required={deliveryMethod === 'Home Delivery'} rows="3"
+                      placeholder="Full address with landmarks for delivery team..."
+                      className={`w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-slate-700 shadow-sm ${true ? 'bg-slate-50 cursor-not-allowed text-slate-400' : ''}`}
+                      value={formData.address}
+                      readOnly
+                      onChange={e => setFormData({ ...formData, address: e.target.value })}
+                    ></textarea>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <InputField 
+                      label="City"
+                      type="text" required={deliveryMethod === 'Home Delivery'}
+                      placeholder="City"
+                      icon={<HiOutlineBuildingOffice />}
+                      value={formData.city}
+                      readOnly
+                      onChange={e => setFormData({ ...formData, city: e.target.value })}
+                    />
+                    <InputField 
+                      label="Pincode"
+                      type="text" required={deliveryMethod === 'Home Delivery'}
+                      placeholder="000 000"
+                      value={formData.pincode}
+                      readOnly
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                        setFormData({ ...formData, pincode: val })
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-6">
+                    <div className="w-16 h-16 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto text-brand-blue">
+                      <HiOutlineBuildingOffice className="text-3xl" />
+                    </div>
+                    <div>
+                      <h5 className="text-lg font-black text-slate-900 tracking-tight">Office Pickup</h5>
+                      <p className="text-slate-500 text-xs font-medium">Select your nearest branch to collect your kit in person.</p>
+                    </div>
+                    
+                    <div className="max-w-xs mx-auto space-y-2">
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest text-left ml-1">Select Branch</label>
+                      <select
+                        required={deliveryMethod === 'Collect in Person'}
+                        value={selectedBranch}
+                        onChange={(e) => setSelectedBranch(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue outline-none transition-all font-bold text-slate-700 shadow-sm cursor-pointer"
+                      >
+                        <option value="">Select Branch</option>
+                        <option value="Chennai">Chennai Office</option>
+                        <option value="Bangalore">Bangalore Office</option>
+                        <option value="Hyderabad">Hyderabad Office</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           </div>
 
@@ -238,6 +318,56 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
           </div>
         </div>
       </div>
+      
+      {/* Final Confirmation Modal */}
+      {showConfirm && createPortal(
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowConfirm(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-10 animate-in zoom-in-95 duration-500 text-center">
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 border border-emerald-100 shadow-inner">
+               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            
+            <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Confirm Selection</h3>
+            <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+              Excellent choice, <span className="text-slate-900 font-bold">{employee.name.split(' ')[0]}</span>! You have selected <span className="text-brand-blue font-bold">{selectedKits.length} premium items</span>.
+            </p>
+
+            <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100 text-left">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Delivery Choice</p>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-blue border border-slate-200">
+                  {deliveryMethod === 'Home Delivery' ? <HiOutlineHome /> : <HiOutlineBuildingOffice />}
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1">{deliveryMethod}</p>
+                  <p className="text-[11px] text-slate-500 font-medium leading-tight">
+                    {deliveryMethod === 'Home Delivery' 
+                      ? `${formData.address}, ${formData.city}`
+                      : `Tiger Analytics Office - ${selectedBranch} Branch`}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={handleFinalSubmit}
+                className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-emerald-600 transition-all active:scale-95 uppercase tracking-widest text-[10px]"
+              >
+                Done, Place My Order
+              </button>
+              <button 
+                onClick={() => setShowConfirm(false)}
+                className="w-full bg-white text-slate-400 font-bold py-4 rounded-2xl hover:text-slate-600 transition-all text-[10px] uppercase tracking-widest"
+              >
+                Go Back & Edit
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
