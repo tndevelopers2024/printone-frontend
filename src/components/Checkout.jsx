@@ -33,6 +33,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
   })
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [isEditingAddress, setIsEditingAddress] = useState(false)
 
   const handlePlaceOrderClick = (e) => {
     e.preventDefault()
@@ -140,6 +141,15 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] flex items-center gap-4">
                   <span className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-[8px]">02</span>
                   Delivery Method
+                  {deliveryMethod === 'Home Delivery' && !isEditingAddress && (
+                    <button 
+                      type="button"
+                      onClick={() => setIsEditingAddress(true)}
+                      className="border border-slate-200 ml-4 px-3 py-1.5 rounded-full text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:bg-slate-100 transition-all"
+                    >
+                      Edit Address
+                    </button>
+                  )}
                 </h4>
                 
                 <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm self-start md:self-auto">
@@ -165,7 +175,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                       placeholder="Door / Block No."
                       icon={<HiOutlineHome />}
                       value={formData.doorNo}
-                      readOnly
+                      readOnly={!isEditingAddress}
                       onChange={e => setFormData({ ...formData, doorNo: e.target.value })}
                     />
                     <div className="md:col-span-2">
@@ -175,7 +185,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                         placeholder="Street / Residency Name"
                         icon={<HiOutlineMapPin />}
                         value={formData.street}
-                        readOnly
+                        readOnly={!isEditingAddress}
                         onChange={e => setFormData({ ...formData, street: e.target.value })}
                       />
                     </div>
@@ -186,9 +196,9 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                     <textarea 
                       required={deliveryMethod === 'Home Delivery'} rows="3"
                       placeholder="Full address with landmarks for delivery team..."
-                      className={`w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-slate-700 shadow-sm ${true ? 'bg-slate-50 cursor-not-allowed text-slate-400' : ''}`}
+                      className={`w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-slate-700 shadow-sm ${!isEditingAddress ? 'bg-slate-50 cursor-not-allowed text-slate-400' : ''}`}
                       value={formData.address}
-                      readOnly
+                      readOnly={!isEditingAddress}
                       onChange={e => setFormData({ ...formData, address: e.target.value })}
                     ></textarea>
                   </div>
@@ -200,7 +210,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                       placeholder="City"
                       icon={<HiOutlineBuildingOffice />}
                       value={formData.city}
-                      readOnly
+                      readOnly={!isEditingAddress}
                       onChange={e => setFormData({ ...formData, city: e.target.value })}
                     />
                     <InputField 
@@ -208,7 +218,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                       type="text" required={deliveryMethod === 'Home Delivery'}
                       placeholder="000 000"
                       value={formData.pincode}
-                      readOnly
+                      readOnly={!isEditingAddress}
                       onChange={e => {
                         const val = e.target.value.replace(/\D/g, '').slice(0, 6)
                         setFormData({ ...formData, pincode: val })
@@ -343,7 +353,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                   <p className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1">{deliveryMethod}</p>
                   <p className="text-[11px] text-slate-500 font-medium leading-tight">
                     {deliveryMethod === 'Home Delivery' 
-                      ? `${formData.address}, ${formData.city}`
+                      ? `${formData.doorNo ? formData.doorNo + ', ' : ''}${formData.street ? formData.street + ', ' : ''}${formData.address}, ${formData.city} - ${formData.pincode}`
                       : `Tiger Analytics Office - ${selectedBranch} Branch`}
                   </p>
                 </div>
