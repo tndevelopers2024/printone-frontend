@@ -24,7 +24,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
   const [selectedBranch, setSelectedBranch] = useState('')
   const [formData, setFormData] = useState({
     email: employee.email || '',
-    phone: '',
+    phone: employee.phone || employee.primary_mobile_number || '',
     doorNo: employee.doorNo || '',
     street: employee.street || '',
     address: employee.address || '',

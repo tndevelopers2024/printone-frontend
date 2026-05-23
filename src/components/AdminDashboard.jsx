@@ -109,7 +109,7 @@ const OrderDetailsModal = ({ order, kits, onClose, onUpdateStatus, updateDeliver
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Full Address String</p>
-                      <p className="text-[10px] font-bold text-slate-500 leading-relaxed italic line-clamp-2">{order.shippingAddress.address}</p>
+                      <p className="text-[10px] font-bold text-slate-500 leading-relaxed italic">{order.shippingAddress.address}</p>
                     </div>
                     <div className={`grid ${order.shippingAddress.pincode === 'Pickup' ? 'grid-cols-1' : 'grid-cols-2'} gap-4 pt-1`}>
                       <div className="space-y-0.5">
