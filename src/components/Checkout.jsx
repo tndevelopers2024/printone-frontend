@@ -20,8 +20,7 @@ const InputField = ({ label, icon, ...props }) => (
 )
 
 export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
-  const [deliveryMethod, setDeliveryMethod] = useState('Home Delivery') // 'Home Delivery' or 'Collect in Person'
-  const [selectedBranch, setSelectedBranch] = useState('')
+  const deliveryMethod = 'Home Delivery'
   const [formData, setFormData] = useState({
     email: employee.email || '',
     phone: employee.phone || employee.primary_mobile_number || '',
@@ -37,10 +36,6 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
 
   const handlePlaceOrderClick = (e) => {
     e.preventDefault()
-    if (deliveryMethod === 'Collect in Person' && !selectedBranch) {
-      alert('Please select an office branch for collection.')
-      return
-    }
     if (!formData.phone) {
       alert('Please provide a primary phone number.')
       return
@@ -59,13 +54,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
         phone: formData.phone
       },
       deliveryMethod,
-      shippingAddress: deliveryMethod === 'Collect in Person' ? {
-        doorNo: 'Office',
-        street: selectedBranch,
-        address: `Tiger Analytics Office - ${selectedBranch} Branch`,
-        city: selectedBranch,
-        pincode: 'Pickup'
-      } : {
+      shippingAddress: {
         doorNo: formData.doorNo,
         street: formData.street,
         address: formData.address,
@@ -141,125 +130,93 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] flex items-center gap-4">
                   <span className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-[8px]">02</span>
                   Delivery Method
-                  {deliveryMethod === 'Home Delivery' && !isEditingAddress && (
+                  {!isEditingAddress && (
                     <button 
                       type="button"
                       onClick={() => setIsEditingAddress(true)}
-                      className="border border-slate-200 ml-4 px-3 py-1.5 rounded-full text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:bg-slate-100 transition-all"
+                      className="cursor-pointer border border-slate-200 ml-4 px-3 py-1.5 rounded-full text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:bg-slate-100 transition-all"
                     >
                       Edit Address
                     </button>
                   )}
                 </h4>
-                
-                <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm self-start md:self-auto">
-                  {['Home Delivery', 'Collect in Person'].map(method => (
-                    <button
-                      key={method}
-                      type="button"
-                      onClick={() => setDeliveryMethod(method)}
-                      className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${deliveryMethod === method ? 'bg-brand-blue text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      {method}
-                    </button>
-                  ))}
-                </div>
               </div>
 
-              {deliveryMethod === 'Home Delivery' ? (
-                <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <InputField 
+                    label="Door / Block No."
+                    type="text" required
+                    placeholder="Door / Block No."
+                    icon={<HiOutlineHome />}
+                    value={formData.doorNo}
+                    readOnly={!isEditingAddress}
+                    onChange={e => setFormData({ ...formData, doorNo: e.target.value })}
+                  />
+                  <div className="md:col-span-2">
                     <InputField 
-                      label="Door / Block No."
-                      type="text" required={deliveryMethod === 'Home Delivery'}
-                      placeholder="Door / Block No."
-                      icon={<HiOutlineHome />}
-                      value={formData.doorNo}
+                      label="Street / Residency Name"
+                      type="text" required
+                      placeholder="Street / Residency Name"
+                      icon={<HiOutlineMapPin />}
+                      value={formData.street}
                       readOnly={!isEditingAddress}
-                      onChange={e => setFormData({ ...formData, doorNo: e.target.value })}
-                    />
-                    <div className="md:col-span-2">
-                      <InputField 
-                        label="Street / Residency Name"
-                        type="text" required={deliveryMethod === 'Home Delivery'}
-                        placeholder="Street / Residency Name"
-                        icon={<HiOutlineMapPin />}
-                        value={formData.street}
-                        readOnly={!isEditingAddress}
-                        onChange={e => setFormData({ ...formData, street: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Complete Address</label>
-                    <textarea 
-                      required={deliveryMethod === 'Home Delivery'} rows="3"
-                      placeholder="Full address with landmarks for delivery team..."
-                      className={`w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-slate-700 shadow-sm ${!isEditingAddress ? 'bg-slate-50 cursor-not-allowed text-slate-400' : ''}`}
-                      value={formData.address}
-                      readOnly={!isEditingAddress}
-                      onChange={e => setFormData({ ...formData, address: e.target.value })}
-                    ></textarea>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <InputField 
-                      label="City"
-                      type="text" required={deliveryMethod === 'Home Delivery'}
-                      placeholder="City"
-                      icon={<HiOutlineBuildingOffice />}
-                      value={formData.city}
-                      readOnly={!isEditingAddress}
-                      onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    />
-                    <InputField 
-                      label="Pincode"
-                      type="text" required={deliveryMethod === 'Home Delivery'}
-                      placeholder="000 000"
-                      value={formData.pincode}
-                      readOnly={!isEditingAddress}
-                      onChange={e => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, 6)
-                        setFormData({ ...formData, pincode: val })
-                      }}
+                      onChange={e => setFormData({ ...formData, street: e.target.value })}
                     />
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-6">
-                    <div className="w-16 h-16 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto text-brand-blue">
-                      <HiOutlineBuildingOffice className="text-3xl" />
-                    </div>
-                    <div>
-                      <h5 className="text-lg font-black text-slate-900 tracking-tight">Office Pickup</h5>
-                      <p className="text-slate-500 text-xs font-medium">Select your nearest branch to collect your kit in person.</p>
-                    </div>
-                    
-                    <div className="max-w-xs mx-auto space-y-2">
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest text-left ml-1">Select Branch</label>
-                      <select
-                        required={deliveryMethod === 'Collect in Person'}
-                        value={selectedBranch}
-                        onChange={(e) => setSelectedBranch(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue outline-none transition-all font-bold text-slate-700 shadow-sm cursor-pointer"
-                      >
-                        <option value="">Select Branch</option>
-                        <option value="Chennai">Chennai Office</option>
-                        <option value="Bangalore">Bangalore Office</option>
-                        <option value="Hyderabad">Hyderabad Office</option>
-                      </select>
-                    </div>
-                  </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Complete Address</label>
+                  <textarea 
+                    required rows="3"
+                    placeholder="Full address with landmarks for delivery team..."
+                    className={`w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-slate-700 shadow-sm ${!isEditingAddress ? 'bg-slate-50 cursor-not-allowed text-slate-400' : ''}`}
+                    value={formData.address}
+                    readOnly={!isEditingAddress}
+                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                  ></textarea>
                 </div>
-              )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <InputField 
+                    label="City"
+                    type="text" required
+                    placeholder="City"
+                    icon={<HiOutlineBuildingOffice />}
+                    value={formData.city}
+                    readOnly={!isEditingAddress}
+                    onChange={e => setFormData({ ...formData, city: e.target.value })}
+                  />
+                  <InputField 
+                    label="Pincode"
+                    type="text" required
+                    placeholder="000 000"
+                    value={formData.pincode}
+                    readOnly={!isEditingAddress}
+                    onChange={e => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                      setFormData({ ...formData, pincode: val })
+                    }}
+                  />
+                </div>
+              </div>
             </section>
+          </div>
+
+          <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-4 mt-8 flex items-start gap-3">
+            <span className="text-amber-500 text-lg mt-0.5">⚠️</span>
+            <div>
+              <p className="text-[18px] font-black text-amber-800 uppercase tracking-wider mb-0.5">Important Notice</p>
+              <p className="text-[16px] font-bold text-amber-700/90 leading-relaxed">
+                Please double-check your shipping details. You cannot change the address once you place the order.
+              </p>
+            </div>
           </div>
 
           <button 
             type="submit" disabled={loading}
-            className="cursor-pointer w-full bg-brand-dark hover:bg-brand-orange text-white font-black py-6 rounded-[28px] shadow-2xl hover:shadow-brand-orange/30 transition-all active:scale-[0.98] disabled:opacity-50 uppercase tracking-[0.4em] text-xs mt-8 flex items-center justify-center gap-6 group"
+            className="cursor-pointer w-full bg-brand-dark hover:bg-brand-orange text-white font-black py-6 rounded-[28px] shadow-2xl hover:shadow-brand-orange/30 transition-all active:scale-[0.98] disabled:opacity-50 uppercase tracking-[0.4em] text-xs mt-4 flex items-center justify-center gap-6 group"
           >
             {loading ? 'Committing Selection...' : 'Place Order'}
           </button>
@@ -333,7 +290,7 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
       {showConfirm && createPortal(
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowConfirm(false)} />
-          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-10 animate-in zoom-in-95 duration-500 text-center">
+          <div className="relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden p-10 animate-in zoom-in-95 duration-500 text-center">
             <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 border border-emerald-100 shadow-inner">
                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
             </div>
@@ -346,19 +303,22 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
             <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100 text-left">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Delivery Choice</p>
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-blue border border-slate-200">
-                  {deliveryMethod === 'Home Delivery' ? <HiOutlineHome /> : <HiOutlineBuildingOffice />}
+                <div className="w-24 h-10 bg-white rounded-xl flex items-center justify-center text-brand-blue border border-slate-200">
+                  <HiOutlineHome />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1">{deliveryMethod}</p>
+                  <p className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1">Home Delivery</p>
                   <p className="text-[11px] text-slate-500 font-medium leading-tight">
-                    {deliveryMethod === 'Home Delivery' 
-                      ? `${formData.doorNo ? formData.doorNo + ', ' : ''}${formData.street ? formData.street + ', ' : ''}${formData.address}, ${formData.city} - ${formData.pincode}`
-                      : `Tiger Analytics Office - ${selectedBranch} Branch`}
+                    {`${formData.doorNo ? formData.doorNo + ', ' : ''}${formData.street ? formData.street + ', ' : ''}${formData.address}, ${formData.city} - ${formData.pincode}`}
                   </p>
                 </div>
               </div>
             </div>
+
+            <p className="text-[10px] font-bold text-rose-500/90 mb-6 tracking-wider uppercase flex items-center justify-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              Address details cannot be updated after order placement
+            </p>
 
             <div className="flex flex-col gap-3">
               <button 

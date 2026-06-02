@@ -91,11 +91,11 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
         )}
 
         {/* Image Section */}
-        <div className="relative aspect-[16/10] w-full bg-slate-50 flex items-center justify-center overflow-hidden">
+        <div className="relative aspect-[14/10] w-full bg-slate-50 flex items-center justify-center overflow-hidden">
           <img 
             src={kit.image} 
             alt={kit.title} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+            className="w-full h-full transition-transform duration-700 group-hover:scale-110" 
           />
           
           {/* Size Overlay for T-shirts */}

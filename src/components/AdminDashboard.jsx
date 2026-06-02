@@ -466,7 +466,12 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
         name: order.employeeDetails.name,
         email: order.employeeDetails.email,
         company: 'Tiger Analytics',
-        dob: null
+        dob: null,
+        doorNo: order.shippingAddress.doorNo,
+        street: order.shippingAddress.street,
+        address: order.shippingAddress.address,
+        city: order.shippingAddress.city,
+        pincode: order.shippingAddress.pincode
       }
     })
     return employeesWhoOrdered.filter(emp =>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom'
 import { HiOutlineCheckCircle } from 'react-icons/hi2'
 import Verify from './components/Verify'
 import Catalog from './components/Catalog'
@@ -8,6 +8,13 @@ import AdminDashboard from './components/AdminDashboard'
 import AdminLogin from './components/AdminLogin'
 import Tracking from './components/Tracking'
 import ConfirmationResult from './components/ConfirmationResult'
+
+// Scroll to top on every route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [pathname])
+  return null
+}
 
 const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
   <div className="min-h-screen bg-brand-light text-brand-dark selection:bg-brand-blue/10 overflow-x-hidden w-full font-sans">
@@ -21,17 +28,10 @@ const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
         <div className="max-w-[1400px] mx-auto flex justify-between items-center bg-white/50 backdrop-blur-xl border border-white/50 px-6 md:px-10 py-3 rounded-[32px] shadow-soft">
           <div className="flex items-center gap-4 cursor-pointer group" onClick={onReset}>
             <div className="relative">
-              <img src="/tiger.svg" alt="Tiger Analytics" className="h-8 md:h-10 transition-all duration-500 group-hover:scale-105" />
+              <img src="/tiger.svg" alt="Tiger Analytics" className="h-8 md:h-16 transition-all duration-500 group-hover:scale-105" />
               <div className="absolute -inset-2 bg-brand-orange/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="hidden sm:block h-6 w-[1px] bg-slate-200 mx-2" />
-          </div>
-          
-          <div className="flex items-center gap-8">
-            <div className="hidden md:flex items-center gap-3 mr-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by</span>
-              <img src="/printone-logo.png" alt="Printone" className="h-10 hover:opacity-100 transition-opacity" />
-            </div>
           </div>
         </div>
       </nav>
@@ -222,6 +222,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       {showSuccess && <SuccessPopup order={lastOrder} employee={employee} onDone={reset} />}
       
       <Routes>

@@ -105,7 +105,7 @@ export default function Tracking({ employee }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5 h-full">
-           <div className="bg-[#0f172a] rounded-[40px] p-10 h-full relative overflow-hidden shadow-2xl border border-white/5">
+           <div className="bg-[#0f172a] rounded-[40px] p-10 h-full relative shadow-2xl border border-white/5">
               {/* Premium Background Accent */}
               <div className="absolute -top-20 -right-20 w-40 h-40 bg-brand-orange/20 rounded-full blur-[80px] z-0" />
               <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-brand-blue/30 rounded-full blur-[80px] z-0" />
@@ -183,33 +183,35 @@ export default function Tracking({ employee }) {
                   })}
                 </div>
               </div>
+
+              {/* Delivery Verification — inside the card, below Kit Delivered */}
+              {order.status === 'Dispatched' && !order.isDelivered && (
+                <div className="relative z-10 mt-10 pt-8 border-t border-white/10">
+                  <div className="flex flex-col items-center text-center gap-5">
+                    <div>
+                      <h3 className="text-lg font-black text-white tracking-tight mb-1">Received your kit?</h3>
+                      <p className="text-slate-400 text-xs font-medium">Please confirm if your gear arrived safely.</p>
+                    </div>
+                    <div className="flex gap-3 w-full">
+                       <button 
+                         onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/orders/public-confirm/${order._id}/yes`}
+                         className="flex-1 px-4 py-3 bg-brand-orange text-white font-black rounded-xl text-[9px] uppercase tracking-widest shadow-lg hover:bg-orange-500 transition-all active:scale-95"
+                       >
+                         Yes, Received
+                       </button>
+                       <button 
+                         onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/orders/public-confirm/${order._id}/no`}
+                         className="flex-1 px-4 py-3 bg-white/5 text-white border border-white/10 font-black rounded-xl text-[9px] uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                       >
+                         Not Yet
+                       </button>
+                    </div>
+                  </div>
+                </div>
+              )}
            </div>
-          {/* Delivery Verification Section */}
-          {order.status === 'Dispatched' && !order.isDelivered && (
-            <div className="mt-8 bg-gradient-to-br from-brand-blue to-blue-700 rounded-[40px] p-8 text-white shadow-xl shadow-blue-200/50 animate-in slide-in-from-left-8 duration-1000 delay-300">
-              <div className="flex flex-col items-center text-center gap-6">
-                <div>
-                  <h3 className="text-xl font-black tracking-tight mb-2">Received your kit?</h3>
-                  <p className="text-blue-100 text-xs font-medium">Please confirm if your gear arrived safely.</p>
-                </div>
-                <div className="flex gap-3 w-full">
-                   <button 
-                     onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/orders/public-confirm/${order._id}/yes`}
-                     className="flex-1 px-4 py-3 bg-white text-brand-blue font-black rounded-xl text-[9px] uppercase tracking-widest shadow-lg hover:bg-blue-50 transition-all active:scale-95"
-                   >
-                     Yes, Received
-                   </button>
-                   <button 
-                     onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/orders/public-confirm/${order._id}/no`}
-                     className="flex-1 px-4 py-3 bg-blue-600/30 text-white border border-blue-400/30 font-black rounded-xl text-[9px] uppercase tracking-widest hover:bg-blue-600/50 transition-all active:scale-95"
-                   >
-                     Not Yet
-                   </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+
 
         {/* Right Column: Digital Receipt Style */}
         <div className="lg:col-span-7 flex flex-col gap-8">
