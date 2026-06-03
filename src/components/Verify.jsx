@@ -117,10 +117,15 @@ export default function Verify({ onVerified }) {
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tighter leading-tight mb-4">
           Claim your welcome kits.
         </h1>
-        <p className="text-slate-500 text-base font-medium leading-relaxed max-w-md mb-8">
-          {step === 'email'
-            ? 'Enter your company email to receive a one-time password. No passwords required.'
-            : `We sent a 6-digit OTP to ${email}. Enter it below to continue.`}
+        <p className="text-slate-500 text-base font-medium leading-relaxed mb-8">
+          {step === 'email' ? (
+            <>
+              Enter your company email to receive a one-time Passcode.<br />
+              No passwords required.
+            </>
+          ) : (
+            `We sent a 6-digit OTP to ${email}. Enter it below to continue.`
+          )}
         </p>
 
         <div className="bg-slate-50/50 border border-slate-100 rounded-[32px] p-6 md:p-8 shadow-soft">

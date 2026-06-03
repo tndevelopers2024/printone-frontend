@@ -392,9 +392,168 @@ const RangeDatePicker = ({ isOpen, range, onSelect, onClose }) => {
   )
 }
 
+const InventoryView = ({ inventory, setInventory, readOnly }) => {
+  const [localEdits, setLocalEdits] = useState({});
+  const [toast, setToast] = useState({ show: false, message: '' });
 
+  const showToastMessage = (msg) => {
+    setToast({ show: true, message: msg });
+    setTimeout(() => setToast({ show: false, message: '' }), 3000);
+  };
+
+  useEffect(() => {
+    const edits = {};
+    inventory.forEach(item => {
+      edits[item._id] = { quantity: item.quantity, sizes: { ...item.sizes } };
+    });
+    setLocalEdits(edits);
+  }, [inventory]);
+
+  const handleEdit = (id, field, value) => {
+    setLocalEdits(prev => {
+      const current = prev[id] || {};
+      if (field === 'quantity') {
+        return { ...prev, [id]: { ...current, quantity: value } };
+      } else {
+        return { ...prev, [id]: { ...current, sizes: { ...current.sizes, [field]: value } } };
+      }
+    });
+  };
+
+  const saveQuantity = async (id) => {
+    if (readOnly) return;
+    try {
+      const editData = localEdits[id];
+      const itemToUpdate = inventory.find(i => i._id === id);
+      const payload = itemToUpdate.hasSizes 
+        ? { sizes: { S: Number(editData.sizes.S), M: Number(editData.sizes.M), L: Number(editData.sizes.L), XL: Number(editData.sizes.XL), XXL: Number(editData.sizes.XXL) } }
+        : { quantity: Number(editData.quantity) };
+        
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/inventory/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInventory(inventory.map(item => item._id === id ? data.item : item));
+        showToastMessage('Inventory updated successfully!');
+      }
+    } catch (err) {
+      showToastMessage('Failed to update inventory');
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-100 shadow-[0_16px_32px_-8px_rgba(0,0,0,0.03)] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 relative">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className="fixed bottom-10 right-10 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3">
+            <HiOutlineCheckCircle className="text-emerald-400 text-xl" />
+            <span className="text-sm font-bold tracking-wide">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="p-8 border-b border-slate-50 bg-slate-50/30">
+        <h3 className="text-lg font-black text-slate-900 tracking-tight">Current Inventory</h3>
+        <p className="text-[11px] font-bold text-slate-500 mt-1">Manage and track available stock for fixed products.</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50/50 border-b border-slate-100">
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">Product Name</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">Available Quantity</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {inventory.map((item) => {
+              const editData = localEdits[item._id] || { quantity: 0, sizes: {} };
+              return item.hasSizes ? (
+                    <>
+                      {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                        <tr key={`${item._id}-${size}`} className="hover:bg-slate-50/30 transition-colors group">
+                          <td className="px-8 py-5 border-t border-slate-50">
+                            <span className="text-xs font-bold text-slate-700">{item.itemName} - Size {size}</span>
+                          </td>
+                          <td className="px-8 py-5 border-t border-slate-50">
+                            {readOnly ? (
+                              <span className="text-xs font-bold text-slate-700">{item.sizes?.[size] || 0} units</span>
+                            ) : (
+                              <input 
+                                type="number" 
+                                value={editData.sizes?.[size] ?? (item.sizes?.[size] || 0)} 
+                                onChange={(e) => handleEdit(item._id, size, e.target.value)}
+                                className="w-20 bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center"
+                              />
+                            )}
+                          </td>
+                          <td className="px-8 py-5 text-right border-t border-slate-50">
+                            {!readOnly ? (
+                              <button 
+                                onClick={() => saveQuantity(item._id)}
+                                className="bg-brand-blue text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+                              >
+                                Save
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">View Only</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </>
+                  ) : (
+                    <tr key={item._id} className="hover:bg-slate-50/30 transition-colors group">
+                      <td className="px-8 py-5">
+                        <span className="text-xs font-bold text-slate-700">{item.itemName}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        {readOnly ? (
+                          <span className={`text-sm font-black ${item.quantity > 10 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {item.quantity} units
+                          </span>
+                        ) : (
+                          <input 
+                            type="number" 
+                            value={editData.quantity ?? item.quantity} 
+                            onChange={(e) => handleEdit(item._id, 'quantity', e.target.value)}
+                            className="w-20 bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center"
+                          />
+                        )}
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        {!readOnly ? (
+                          <button 
+                            onClick={() => saveQuantity(item._id)}
+                            className="bg-brand-blue text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+                          >
+                            Save
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">View Only</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+            })}
+            {inventory.length === 0 && (
+              <tr>
+                <td colSpan="3" className="px-8 py-12 text-center text-slate-400 text-[11px] font-bold uppercase tracking-widest">No inventory items found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 
 export default function AdminDashboard({ onLogout, readOnly = false }) {
+  const [inventory, setInventory] = useState([]);
   const [orders, setOrders] = useState([])
   const [employees, setEmployees] = useState([])
   const [kits, setKits] = useState([])
@@ -410,10 +569,11 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
   const location = useLocation()
 
   const isEmployeesView = location.pathname.includes('/employees')
+  const isInventoryView = location.pathname.includes('/inventory')
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [isEmployeesView, statusFilter, searchQuery, dateRange, itemsPerPage])
+  }, [isEmployeesView, isInventoryView, statusFilter, searchQuery, dateRange, itemsPerPage])
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/kits`)
@@ -426,16 +586,18 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
     setLoading(true)
     Promise.all([
       fetch(`${import.meta.env.VITE_API_URL}/api/orders`).then(res => res.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/employees`).then(res => res.json())
-    ]).then(([ordersData, employeesData]) => {
+      fetch(`${import.meta.env.VITE_API_URL}/api/employees`).then(res => res.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/inventory`).then(res => res.json().catch(() => []))
+    ]).then(([ordersData, employeesData, inventoryData]) => {
       setOrders(ordersData)
       setEmployees(employeesData)
+      setInventory(Array.isArray(inventoryData) ? inventoryData : [])
       setLoading(false)
     }).catch(err => {
       console.error("Failed to load data", err)
       setLoading(false)
     })
-  }, [isEmployeesView])
+  }, [isEmployeesView, isInventoryView])
 
   const filteredOrders = orders.filter(order => {
     const matchesStatus = statusFilter === 'All' ? true : 
@@ -589,7 +751,8 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
             <nav className="space-y-2">
               {[
                 { to: basePath, label: 'Manage Orders', icon: <HiOutlineShoppingBag />, end: true },
-                { to: `${basePath}/employees`, label: 'Employees List', icon: <HiOutlineUsers /> }
+                { to: `${basePath}/employees`, label: 'Employees List', icon: <HiOutlineUsers /> },
+                { to: `${basePath}/inventory`, label: 'Inventory Management', icon: <HiOutlineInbox /> }
               ].map(item => (
                 <NavLink 
                   key={item.to} 
@@ -634,7 +797,7 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
             
             <div>
               <p className="text-xl font-black text-slate-900 tracking-tight">
-                {isEmployeesView ? 'User Directory' : 'Admin Dashboard'}
+                {isEmployeesView ? 'User Directory' : isInventoryView ? 'Inventory Management' : 'Admin Dashboard'}
               </p>
             </div>
           </div>
@@ -653,6 +816,7 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
         <div className="flex-1 overflow-y-auto p-8 scrollbar-hide">
           <div className="max-w-[1700px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <Routes>
+              <Route path="/inventory" element={<InventoryView inventory={inventory} setInventory={setInventory} readOnly={readOnly} />} />
               <Route path="*" element={
                 <>
                   {/* Premium Stat Cards */}
