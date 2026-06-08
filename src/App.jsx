@@ -18,9 +18,10 @@ const ScrollToTop = () => {
 
 const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
   <div className="min-h-screen bg-brand-light text-brand-dark selection:bg-brand-blue/10 overflow-x-hidden w-full font-sans">
-    <div className="fixed inset-0 pointer-events-none z-0">
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-brand-blue/5 blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-orange/5 blur-[120px]" />
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-br from-brand-orange/30 to-amber-400/20 blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-brand-blue/30 to-indigo-400/20 blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+      <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-gradient-to-bl from-amber-200/20 to-orange-300/20 blur-[80px] animate-pulse pointer-events-none" style={{ animationDuration: '12s', animationDelay: '1s' }} />
     </div>
 
     {!hideNavFooter && (
@@ -37,7 +38,7 @@ const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
       </nav>
     )}
 
-    <main className={`relative z-10 ${hideNavFooter ? '' : 'mx-auto max-w-[1400px] px-6 md:px-0 py-6 pb-20 w-full min-h-[calc(100vh-200px)]'}`}>
+    <main className={`relative z-[100] ${hideNavFooter ? '' : 'mx-auto max-w-[1400px] px-6 md:px-12 py-6 pb-20 w-full'}`}>
       {children}
     </main>
 
@@ -85,9 +86,9 @@ const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
 )
 
 const SuccessPopup = ({ order, employee, onDone }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10 animate-in fade-in duration-500">
+  <div className="fixed inset-0 z-[999] flex items-center justify-center p-6 sm:p-10 animate-in fade-in duration-500">
     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onDone} />
-    <div className="relative w-full max-w-xl bg-white rounded-[48px] shadow-[0_32px_80px_rgba(0,0,0,0.15)] overflow-hidden animate-in zoom-in slide-in-from-bottom-12 duration-700">
+    <div className="relative z-10 w-full max-w-xl bg-white rounded-[48px] shadow-[0_32px_80px_rgba(0,0,0,0.15)] overflow-hidden animate-in zoom-in slide-in-from-bottom-12 duration-700">
       <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-green-400 to-emerald-500" />
       
       <div className="p-10 md:p-14 text-center">
@@ -226,7 +227,7 @@ function App() {
       {showSuccess && <SuccessPopup order={lastOrder} employee={employee} onDone={reset} />}
       
       <Routes>
-        <Route path="/" element={<MainLayout onReset={reset} onNavigate={navigate}><div className="pt-4 md:pt-8"><Verify onVerified={handleVerified} /></div></MainLayout>} />
+        <Route path="/" element={<MainLayout onReset={reset} onNavigate={navigate}><div className=""><Verify onVerified={handleVerified} /></div></MainLayout>} />
         <Route path="/catalog" element={employee ? <MainLayout onReset={reset} onNavigate={navigate}><div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><Catalog onSelect={toggleKit} selectedKits={selectedKits} onCheckout={() => navigate('/checkout')} /></div></MainLayout> : <Navigate to="/" />} />
         <Route path="/checkout" element={employee && selectedKits.length > 0 ? <MainLayout onReset={reset} onNavigate={navigate}><Checkout selectedKits={selectedKits} employee={employee} onOrderPlaced={handleOrderPlaced} /></MainLayout> : <Navigate to="/" />} />
         <Route path="/track" element={employee ? <MainLayout onReset={reset} onNavigate={navigate}><Tracking employee={employee} /></MainLayout> : <Navigate to="/" />} />

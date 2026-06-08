@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { HiOutlineShieldCheck, HiOutlineComputerDesktop, HiOutlineBriefcase, HiOutlineCheckBadge } from 'react-icons/hi2'
+import { HiOutlineShieldCheck, HiOutlineComputerDesktop, HiOutlineBriefcase, HiOutlineCheckBadge, HiOutlineEye, HiOutlineXMark } from 'react-icons/hi2'
 
 export default function Catalog({ onSelect, selectedKits, onCheckout }) {
   const [kits, setKits] = useState([])
   const [loading, setLoading] = useState(true)
+  const [previewItem, setPreviewItem] = useState(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/kits`)
@@ -91,12 +92,21 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
         )}
 
         {/* Image Section */}
-        <div className="relative aspect-[14/10] w-full bg-slate-50 flex items-center justify-center overflow-hidden">
+        <div className="relative aspect-[12/10] w-full bg-slate-50 flex items-center justify-center overflow-hidden">
           <img 
             src={kit.image} 
             alt={kit.title} 
             className="w-full h-full transition-transform duration-700 group-hover:scale-110" 
           />
+          
+          {/* Preview Button */}
+          <button 
+            onClick={(e) => { e.stopPropagation(); setPreviewItem(kit); }}
+            className="absolute top-4 right-4 z-30 w-8 h-8 bg-white/80 hover:bg-white text-slate-600 rounded-full flex items-center justify-center shadow-sm backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 cursor-pointer hover:scale-110"
+            title="Preview Image"
+          >
+            <HiOutlineEye className="text-lg" />
+          </button>
           
           {/* Size Overlay for T-shirts */}
           {isTshirt && (
@@ -249,6 +259,26 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
           </div>
         </button>
       </div>
+
+      {/* Preview Modal */}
+      {previewItem && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setPreviewItem(null)}>
+          <div className="relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => setPreviewItem(null)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/5 hover:bg-black/10 text-slate-800 rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer"
+            >
+              <HiOutlineXMark className="text-xl" />
+            </button>
+            <div className="bg-slate-50 flex items-center justify-center p-12 min-h-[40vh]">
+              <img src={previewItem.image} alt={previewItem.title} className="max-h-[60vh] w-auto object-contain drop-shadow-2xl" />
+            </div>
+            <div className="p-6 bg-white border-t border-slate-100 text-center">
+              <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{previewItem.title}</h3>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

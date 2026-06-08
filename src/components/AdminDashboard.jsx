@@ -21,7 +21,7 @@ import {
 const OrderDetailsModal = ({ order, kits, onClose, onUpdateStatus, updateDeliveryStatus, readOnly }) => {
   if (!order) return null
   const statuses = ['Pending', 'Processing', 'Dispatched']
-  const timelineStatuses = ['Pending', 'Processing', 'Dispatched', 'Delivered']
+  const timelineStatuses = ['Pending', 'Processing', 'Dispatched']
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
@@ -244,15 +244,15 @@ const OrderDetailsModal = ({ order, kits, onClose, onUpdateStatus, updateDeliver
 
              <div className="px-10 relative">
                 {/* Connector Line */}
-                <div className="absolute top-5 left-[calc(10%+20px)] right-[calc(10%+20px)] h-0.5 bg-slate-100 z-0" />
-                <div 
-                  className="absolute top-5 left-[calc(10%+20px)] h-0.5 bg-brand-blue z-0 transition-all duration-1000" 
-                  style={{ 
-                    width: order.isDelivered ? '80%' :
-                           order.status === 'Pending' ? '0%' : 
-                           order.status === 'Processing' ? '26.6%' : '53.3%' 
-                  }} 
-                />
+                <div className="absolute top-5 left-[calc(16.66%)] right-[calc(16.66%)] h-0.5 bg-slate-100 z-0">
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-brand-blue transition-all duration-1000" 
+                    style={{ 
+                      width: order.status === 'Pending' ? '0%' : 
+                             order.status === 'Processing' ? '50%' : '100%' 
+                    }} 
+                  />
+                </div>
 
                 <div className="flex justify-between relative z-10">
                    {timelineStatuses.map((s, i) => {
@@ -392,9 +392,77 @@ const RangeDatePicker = ({ isOpen, range, onSelect, onClose }) => {
   )
 }
 
-const InventoryView = ({ inventory, setInventory, readOnly }) => {
+const DonutChart = ({ data, total }) => {
+  const [hoveredSlice, setHoveredSlice] = useState(null);
+  let cumulativeDash = 0;
+  const circumference = 100;
+
+  return (
+    <div className="relative flex items-center justify-center">
+      <svg viewBox="0 0 42 42" className="w-full h-full transform -rotate-90 drop-shadow-sm overflow-visible">
+        <circle cx="21" cy="21" r="15.91549430918954" fill="none" stroke="#f1f5f9" strokeWidth="6"></circle>
+        {data.map((slice, index) => {
+          const percent = total > 0 ? (slice.value / total) * 100 : 0;
+          if (percent === 0) return null;
+          
+          const dasharray = `${percent} ${circumference - percent}`;
+          const dashoffset = -cumulativeDash;
+          cumulativeDash += percent;
+          
+          return (
+            <circle
+              key={index}
+              cx="21"
+              cy="21"
+              r="15.91549430918954"
+              fill="none"
+              stroke={slice.color}
+              strokeWidth="6"
+              strokeDasharray={dasharray}
+              strokeDashoffset={dashoffset}
+              className="transition-all duration-300 ease-out cursor-pointer hover:stroke-opacity-80 hover:stroke-[8px]"
+              onMouseEnter={() => setHoveredSlice(slice)}
+              onMouseLeave={() => setHoveredSlice(null)}
+            />
+          );
+        })}
+      </svg>
+      <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300 pointer-events-none ${hoveredSlice ? 'opacity-0' : 'opacity-100'}`}>
+        <span className="text-3xl font-black text-slate-900 tracking-tighter leading-none">{total}</span>
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Total Units</span>
+      </div>
+
+      {/* Floating Tooltip */}
+      {hoveredSlice && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[110%] bg-slate-900 text-white p-4 rounded-2xl shadow-2xl w-64 z-[100] pointer-events-none flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+           <p className="text-[10px] font-black uppercase tracking-widest text-center leading-tight mb-1" style={{ color: hoveredSlice.color }}>{hoveredSlice.label}</p>
+           <p className="text-xl font-black mb-3">{hoveredSlice.value} <span className="text-[9px] opacity-50 uppercase tracking-widest">units</span></p>
+           
+           {hoveredSlice.hasSizes && hoveredSlice.sizes && (
+             <div className="grid grid-cols-5 gap-2 border-t border-slate-700/50 pt-3 w-full">
+               {['S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                 const qty = Number(hoveredSlice.sizes[size]) || 0;
+                 return (
+                   <div key={size} className="flex flex-col items-center">
+                     <span className="text-[9px] font-bold text-slate-400 mb-0.5">{size}</span>
+                     <span className={`text-[11px] font-bold ${qty > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>{qty}</span>
+                   </div>
+                 )
+               })}
+             </div>
+           )}
+           {/* Triangle Pointer */}
+           <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 rotate-45 rounded-sm" />
+        </div>
+      )}
+    </div>
+  )
+}  
+
+const InventoryView = ({ inventory, setInventory, readOnly, kits = [] }) => {
   const [localEdits, setLocalEdits] = useState({});
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [editingItem, setEditingItem] = useState(null);
 
   const showToastMessage = (msg) => {
     setToast({ show: true, message: msg });
@@ -444,8 +512,38 @@ const InventoryView = ({ inventory, setInventory, readOnly }) => {
     }
   };
 
+  const COLORS = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#f97316', '#14b8a6', '#6366f1'
+  ];
+
+  // Calculate individual product stats
+  let totalUnits = 0;
+  const chartData = [];
+  
+  inventory.forEach((item, idx) => {
+    let itemTotal = 0;
+    if (item.hasSizes) {
+      Object.values(item.sizes || {}).forEach(qty => {
+        itemTotal += Number(qty) || 0;
+      });
+    } else {
+      itemTotal = Number(item.quantity) || 0;
+    }
+    totalUnits += itemTotal;
+    
+    chartData.push({
+      id: item._id,
+      label: item.itemName,
+      value: itemTotal,
+      color: COLORS[idx % COLORS.length],
+      hasSizes: item.hasSizes,
+      sizes: item.sizes
+    });
+  });
+
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-[0_16px_32px_-8px_rgba(0,0,0,0.03)] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 relative">
+    <div className="bg-white rounded-xl border border-slate-100 shadow-[0_16px_32px_-8px_rgba(0,0,0,0.03)] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 relative flex flex-col h-full min-h-[600px]">
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed bottom-10 right-10 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
@@ -456,98 +554,226 @@ const InventoryView = ({ inventory, setInventory, readOnly }) => {
         </div>
       )}
 
-      <div className="p-8 border-b border-slate-50 bg-slate-50/30">
-        <h3 className="text-lg font-black text-slate-900 tracking-tight">Current Inventory</h3>
-        <p className="text-[11px] font-bold text-slate-500 mt-1">Manage and track available stock for fixed products.</p>
+      <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between flex-shrink-0">
+        <div>
+          <h3 className="text-lg font-black text-slate-900 tracking-tight">Inventory Intelligence</h3>
+          <p className="text-[11px] font-bold text-slate-500 mt-1">Detailed product distribution and stock adjustments.</p>
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-100">
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">Product Name</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">Available Quantity</th>
-              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
+      
+      {/* Overview Section */}
+      <div className="p-8 border-b border-slate-50 bg-gradient-to-br from-slate-50/50 to-white flex flex-col lg:flex-row items-start gap-12 flex-shrink-0">
+        <div className="flex-2 flex items-center justify-center lg:w-[250px] mx-auto lg:mx-0">
+          <DonutChart data={chartData} total={totalUnits} />
+        </div>
+        
+        {/* Legend Section */}
+        <div className="flex-3 w-full flex flex-col h-[300px] overflow-hidden">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Stock Distribution</p>
+          <div className="flex-1 overflow-y-auto pr-4 space-y-3 scrollbar-hide">
+             {chartData.map(slice => (
+               <div key={slice.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group">
+                 <div className="flex items-center gap-3">
+                   <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: slice.color }}></div>
+                   <p className="text-[11px] font-bold text-slate-700 group-hover:text-slate-900 transition-colors line-clamp-1">{slice.label}</p>
+                 </div>
+                 <div className="flex items-center gap-2 flex-shrink-0">
+                   <p className="text-[11px] font-black text-slate-900">{slice.value}</p>
+                   <span className="text-[9px] font-bold text-slate-400 uppercase">units</span>
+                 </div>
+               </div>
+             ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-8 bg-slate-50/30 scrollbar-hide">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {inventory.map((item) => {
               const editData = localEdits[item._id] || { quantity: 0, sizes: {} };
-              return item.hasSizes ? (
-                    <>
-                      {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                        <tr key={`${item._id}-${size}`} className="hover:bg-slate-50/30 transition-colors group">
-                          <td className="px-8 py-5 border-t border-slate-50">
-                            <span className="text-xs font-bold text-slate-700">{item.itemName} - Size {size}</span>
-                          </td>
-                          <td className="px-8 py-5 border-t border-slate-50">
-                            {readOnly ? (
-                              <span className="text-xs font-bold text-slate-700">{item.sizes?.[size] || 0} units</span>
-                            ) : (
-                              <input 
-                                type="number" 
-                                value={editData.sizes?.[size] ?? (item.sizes?.[size] || 0)} 
-                                onChange={(e) => handleEdit(item._id, size, e.target.value)}
-                                className="w-20 bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center"
-                              />
-                            )}
-                          </td>
-                          <td className="px-8 py-5 text-right border-t border-slate-50">
-                            {!readOnly ? (
-                              <button 
-                                onClick={() => saveQuantity(item._id)}
-                                className="bg-brand-blue text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
-                              >
-                                Save
-                              </button>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">View Only</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </>
-                  ) : (
-                    <tr key={item._id} className="hover:bg-slate-50/30 transition-colors group">
-                      <td className="px-8 py-5">
-                        <span className="text-xs font-bold text-slate-700">{item.itemName}</span>
-                      </td>
-                      <td className="px-8 py-5">
-                        {readOnly ? (
-                          <span className={`text-sm font-black ${item.quantity > 10 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {item.quantity} units
-                          </span>
+              
+              // Robust image matching logic
+              const lowerName = item.itemName.toLowerCase();
+              let kitImage = null;
+              if (kits) {
+                const kit = kits.find(k => {
+                  const kitTitle = k.title.toLowerCase();
+                  if (kitTitle === lowerName) return true;
+                  if (kitTitle.includes(lowerName) || lowerName.includes(kitTitle)) return true;
+                  if (lowerName.includes("polo") && kitTitle.includes("polo")) return true;
+                  if (lowerName.includes("messenger") && kitTitle.includes("messenger")) return true;
+                  if (lowerName.includes("lanyard") && kitTitle.includes("lanyard")) return true;
+                  if (lowerName.includes("sipper") && kitTitle.includes("sipper")) return true;
+                  return false;
+                });
+                kitImage = kit?.image;
+              }
+
+              const itemColor = chartData.find(c => c.id === item._id)?.color || '#3b82f6';
+              const itemTotal = chartData.find(c => c.id === item._id)?.value || 0;
+
+              return (
+                <div key={item._id} className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col group relative">
+                  {/* Top Color Accent */}
+                  <div className="h-1.5 w-full" style={{ backgroundColor: itemColor }} />
+                  
+                  <div className="p-6 flex flex-col flex-1">
+                    {/* Header: Image + Title */}
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className="w-16 h-16 bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-sm relative">
+                        {kitImage ? (
+                          <img src={kitImage} alt={item.itemName} className="w-full h-full object-cover" />
                         ) : (
-                          <input 
-                            type="number" 
-                            value={editData.quantity ?? item.quantity} 
-                            onChange={(e) => handleEdit(item._id, 'quantity', e.target.value)}
-                            className="w-20 bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center"
-                          />
+                          <div className="w-full h-full flex items-center justify-center text-slate-300">
+                            <HiOutlineInbox className="text-2xl" />
+                          </div>
                         )}
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        {!readOnly ? (
-                          <button 
-                            onClick={() => saveQuantity(item._id)}
-                            className="bg-brand-blue text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
-                          >
-                            Save
-                          </button>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">View Only</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
+                        <div className="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-2xl pointer-events-none" />
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <h4 className="text-sm font-black text-slate-900 leading-tight mb-1 group-hover:text-brand-blue transition-colors line-clamp-2">{item.itemName}</h4>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: itemColor }}></div>
+                          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                            {item.hasSizes ? 'Multiple Sizes' : 'Standard Item'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Simplified Display */}
+                    <div className="bg-slate-50/50 rounded-xl border border-slate-100 p-4 mb-6 flex-1 flex flex-col justify-center">
+                       {item.hasSizes ? (
+                         <div>
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Size Distribution</p>
+                           <div className="grid grid-cols-5 gap-1">
+                             {['S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                               const qty = Number(item.sizes?.[size]) || 0;
+                               return (
+                                 <div key={size} className="flex flex-col items-center">
+                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{size}</span>
+                                   <span className={`text-xs font-bold ${qty > 0 ? 'text-emerald-600' : 'text-rose-400'}`}>{qty}</span>
+                                 </div>
+                               )
+                             })}
+                           </div>
+                         </div>
+                       ) : (
+                         <div>
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Available Quantity</p>
+                           <p className={`text-xl font-black ${itemTotal > 10 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                             {itemTotal} <span className="text-[10px] uppercase tracking-widest font-bold opacity-50">units</span>
+                           </p>
+                         </div>
+                       )}
+                    </div>
+
+                    {/* Action */}
+                    <div className="mt-auto">
+                      {!readOnly ? (
+                        <button 
+                          onClick={() => setEditingItem({ ...item, kitImage })}
+                          className="w-full bg-slate-900 hover:bg-brand-blue text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl transition-all shadow-md hover:shadow-brand-blue/30 active:scale-[0.98] flex items-center justify-center gap-2"
+                        >
+                          Update Stock
+                        </button>
+                      ) : (
+                        <div className="w-full bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest py-4 rounded-xl text-center border border-slate-200/50">
+                          View Only Mode
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
             })}
+            
             {inventory.length === 0 && (
-              <tr>
-                <td colSpan="3" className="px-8 py-12 text-center text-slate-400 text-[11px] font-bold uppercase tracking-widest">No inventory items found.</td>
-              </tr>
+               <div className="col-span-full py-24 flex flex-col items-center justify-center text-slate-400">
+                  <HiOutlineInbox className="text-4xl mb-4 opacity-50" />
+                  <p className="text-[11px] font-bold uppercase tracking-widest">No inventory items found.</p>
+               </div>
             )}
-          </tbody>
-        </table>
+        </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setEditingItem(null)} />
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl relative z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">Update Stock</h3>
+              <button onClick={() => setEditingItem(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <HiOutlineXMark className="text-xl" />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto">
+              <div className="mb-6 flex flex-col items-center text-center">
+                 {editingItem.kitImage ? (
+                   <div className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden shadow-sm mb-4 relative">
+                     <img src={editingItem.kitImage} alt={editingItem.itemName} className="w-full h-full" />
+                     <div className="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-2xl pointer-events-none" />
+                   </div>
+                 ) : (
+                   <div className="w-32 h-32 bg-slate-100/50 rounded-2xl border border-slate-100 overflow-hidden shadow-sm mb-4 flex items-center justify-center text-slate-300">
+                     <HiOutlineInbox className="text-4xl" />
+                   </div>
+                 )}
+                 <h4 className="text-lg font-black text-slate-900 leading-tight">{editingItem.itemName}</h4>
+                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                   {editingItem.hasSizes ? 'Multiple Sizes' : 'Standard Item'}
+                 </p>
+              </div>
+
+              {editingItem.hasSizes ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                   {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                     <div key={size} className="flex flex-col gap-1.5">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{size}</label>
+                       <input 
+                         type="number" 
+                         value={localEdits[editingItem._id]?.sizes?.[size] ?? (editingItem.sizes?.[size] || 0)} 
+                         onChange={(e) => handleEdit(editingItem._id, size, e.target.value)}
+                         className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center shadow-sm"
+                       />
+                     </div>
+                   ))}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Quantity</label>
+                  <input 
+                    type="number" 
+                    value={localEdits[editingItem._id]?.quantity ?? editingItem.quantity} 
+                    onChange={(e) => handleEdit(editingItem._id, 'quantity', e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-lg font-black rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center shadow-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-4">
+               <button 
+                 onClick={() => setEditingItem(null)}
+                 className="flex-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-black uppercase tracking-widest py-4 rounded-xl transition-all shadow-sm"
+               >
+                 Cancel
+               </button>
+               <button 
+                 onClick={() => {
+                   saveQuantity(editingItem._id);
+                   setEditingItem(null);
+                 }}
+                 className="flex-1 bg-brand-blue hover:bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl transition-all shadow-md shadow-brand-blue/20 active:scale-[0.98]"
+               >
+                 Save Changes
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -663,8 +889,8 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
       })
       const data = await res.json()
       if (data.success) {
-        setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus, statusHistory: data.order.statusHistory, trackingLink: data.order.trackingLink } : o))
-        if (selectedOrder && selectedOrder._id === orderId) { setSelectedOrder({ ...selectedOrder, status: newStatus, statusHistory: data.order.statusHistory, trackingLink: data.order.trackingLink }) }
+        setOrders(orders.map(o => o._id === orderId ? data.order : o))
+        if (selectedOrder && selectedOrder._id === orderId) { setSelectedOrder(data.order) }
         setConfirmingAction(null)
       }
     } catch (err) {
@@ -687,8 +913,8 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
       })
       const data = await res.json()
       if (data.success) {
-        setOrders(orders.map(o => o._id === orderId ? { ...o, isDelivered } : o))
-        if (selectedOrder && selectedOrder._id === orderId) { setSelectedOrder({ ...selectedOrder, isDelivered }) }
+        setOrders(orders.map(o => o._id === orderId ? data.order : o))
+        if (selectedOrder && selectedOrder._id === orderId) { setSelectedOrder(data.order) }
       }
     } catch (err) {
       alert('Failed to update delivery status')
@@ -702,8 +928,32 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
       rows = filteredEmployees.map(e => [e.name, e.email, e.dob, e.company])
       filename = `employees_export_${format(new Date(), 'yyyy-MM-dd')}.csv`
     } else {
-      headers = ['OrderID', 'Name', 'Email', 'Status', 'Address', 'City', 'Pincode', 'Items', 'CreatedAt']
-      rows = filteredOrders.map(o => [o._id, o.employeeDetails.name, o.employeeDetails.email, o.status, `"${o.shippingAddress.address}"`, o.shippingAddress.city, o.shippingAddress.pincode, `"${o.items.map(it => it.title).join(', ')}"`, new Date(o.createdAt).toLocaleDateString()])
+      headers = ['OrderID', 'Name', 'Email', 'Current Status', 'Address', 'City', 'Pincode', 'Items', 'Placed At', 'Processing At', 'Dispatched At', 'Delivered At']
+      rows = filteredOrders.map(o => {
+        const getStatusTime = (statusName) => {
+          const hist = o.statusHistory?.find(h => h.status === statusName);
+          return hist ? new Date(hist.updatedAt).toLocaleString() : 'N/A';
+        };
+        const placedAt = new Date(o.createdAt).toLocaleString();
+        const processingAt = getStatusTime('Processing');
+        const dispatchedAt = getStatusTime('Dispatched');
+        const deliveredAt = o.isDelivered ? getStatusTime('Delivered') : 'N/A';
+        
+        return [
+          o._id, 
+          o.employeeDetails.name, 
+          o.employeeDetails.email, 
+          o.status, 
+          `"${o.shippingAddress.address}"`, 
+          o.shippingAddress.city, 
+          o.shippingAddress.pincode, 
+          `"${o.items.map(it => `${it.title}${it.selectedSize ? ` (${it.selectedSize})` : ''}`).join(', ')}"`, 
+          `"${placedAt}"`, 
+          `"${processingAt}"`, 
+          `"${dispatchedAt}"`, 
+          `"${deliveredAt}"`
+        ];
+      })
       filename = `orders_export_${statusFilter.toLowerCase()}_${format(new Date(), 'yyyy-MM-dd')}.csv`
     }
 
@@ -752,8 +1002,8 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
               {[
                 { to: basePath, label: 'Manage Orders', icon: <HiOutlineShoppingBag />, end: true },
                 { to: `${basePath}/employees`, label: 'Employees List', icon: <HiOutlineUsers /> },
-                { to: `${basePath}/inventory`, label: 'Inventory Management', icon: <HiOutlineInbox /> }
-              ].map(item => (
+                (!readOnly ? { to: `${basePath}/inventory`, label: 'Inventory Management', icon: <HiOutlineInbox /> } : null)
+              ].filter(Boolean).map(item => (
                 <NavLink 
                   key={item.to} 
                   to={item.to} 
@@ -816,7 +1066,9 @@ export default function AdminDashboard({ onLogout, readOnly = false }) {
         <div className="flex-1 overflow-y-auto p-8 scrollbar-hide">
           <div className="max-w-[1700px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <Routes>
-              <Route path="/inventory" element={<InventoryView inventory={inventory} setInventory={setInventory} readOnly={readOnly} />} />
+              {!readOnly && (
+                <Route path="/inventory" element={<InventoryView inventory={inventory} setInventory={setInventory} readOnly={readOnly} kits={kits} />} />
+              )}
               <Route path="*" element={
                 <>
                   {/* Premium Stat Cards */}

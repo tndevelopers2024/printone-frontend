@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { HiOutlineCheck, HiOutlineShoppingBag, HiOutlineCog, HiOutlineTruck, HiOutlineHome, HiOutlineMapPin, HiOutlineCube } from 'react-icons/hi2'
 import { format } from 'date-fns'
 
@@ -13,6 +14,7 @@ export default function Tracking({ employee }) {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -54,7 +56,13 @@ export default function Tracking({ employee }) {
             <HiOutlineCube className="text-4xl" />
           </div>
           <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Tracking Unavailable</h2>
-          <p className="text-slate-500 font-medium">{error || 'Could not find your order. Please contact IT support.'}</p>
+          <p className="text-slate-500 font-medium mb-8">{error || 'Could not find your order. Please contact IT support.'}</p>
+          <button 
+            onClick={() => navigate('/')} 
+            className="cursor-pointer bg-slate-900 hover:bg-brand-blue text-white text-[10px] font-black uppercase tracking-widest px-8 py-4 rounded-xl transition-all shadow-xl hover:shadow-brand-blue/30 active:scale-95"
+          >
+            Return Home
+          </button>
         </div>
       </div>
     )
@@ -225,7 +233,7 @@ export default function Tracking({ employee }) {
                   const url = order.trackingLink.startsWith('http') ? order.trackingLink : `https://${order.trackingLink}`;
                   window.open(url, '_blank', 'noopener,noreferrer');
                 }}
-                className="absolute top-8 right-8 z-20 cursor-pointer flex items-center gap-2.5 bg-brand-blue text-white text-[9px] font-black uppercase tracking-widest px-5 py-3.5 rounded-xl hover:bg-brand-blue/90 transition-all shadow-lg active:scale-95 group"
+                className="absolute top-4 right-4 z-20 cursor-pointer flex items-center gap-2.5 bg-brand-blue text-white text-[9px] font-black uppercase tracking-widest px-5 py-3.5 rounded-xl hover:bg-brand-blue/90 transition-all shadow-lg active:scale-95 group"
               >
                 <HiOutlineTruck className="text-lg group-hover:translate-x-0.5 transition-transform" />
                 Track Bundle
