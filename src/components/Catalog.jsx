@@ -188,7 +188,7 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
             subtitle="Standard inclusion for all employees"
             badge="Locked & Included"
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {kits.filter(k => k.category === 'Standard').map((kit, i) => (
               <ProductCard key={kit._id} kit={kit} isSelected={true} index={i} />
             ))}
@@ -200,7 +200,7 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
           <SectionHeader 
             icon={<HiOutlineComputerDesktop />} 
             title="Professional Upgrade" 
-            subtitle="Personalize your workspace setup"
+            subtitle={<>Personalize your workspace setup - <span className="text-brand-orange font-black bg-brand-orange/10 px-2 py-0.5 rounded ml-1">Select any one</span></>}
             badge={isASelected ? 'Selection Made' : 'REQUIRED: Pick One'}
           />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -220,7 +220,7 @@ export default function Catalog({ onSelect, selectedKits, onCheckout }) {
           <SectionHeader 
             icon={<HiOutlineBriefcase />} 
             title="Premium Carry" 
-            subtitle="Choose your executive bag style"
+            subtitle={<>Choose your executive bag style - <span className="text-brand-orange font-black bg-brand-orange/10 px-2 py-0.5 rounded ml-1">Select any one</span></>}
             badge={isBSelected ? 'Selection Made' : 'REQUIRED: Pick One'}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -47,23 +47,13 @@ const MainLayout = ({ children, hideNavFooter, onReset, onNavigate }) => (
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8">
           <div className="md:col-span-4 max-w-xs">
             <img src="/tiger.svg" alt="Printone" className="h-16 mb-8" />
-            <p className="text-xs text-slate-500 leading-loose font-medium">
-              We are defining the next generation of corporate onboarding. Empowering employees with selection, and companies with control.
-            </p>
           </div>
           <div className="md:col-span-8 flex flex-wrap md:justify-end gap-16 md:gap-20">
             <div className="space-y-6">
               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Contact Us</h4>
               <div className="space-y-3">
-                 <p className="text-sm text-brand-dark font-bold">+91 8939914747</p>
-                 <p className="text-sm text-brand-dark font-bold hover:text-brand-blue transition-colors cursor-pointer underline decoration-brand-blue/20 underline-offset-8">info@printone.co.in</p>
+                 <a href="mailto:info@printone.co.in" className="text-sm text-brand-dark font-bold hover:text-brand-blue transition-colors cursor-pointer underline decoration-brand-blue/20 underline-offset-8">info@printone.co.in</a>
               </div>
-            </div>
-            <div className="space-y-6 max-w-[250px]">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Shop</h4>
-              <p className="text-sm text-brand-dark font-bold leading-relaxed">
-                PRINTONE, No.122, Rajaji Road, West Tambaram, Chennai - 600045
-              </p>
             </div>
             <div className="space-y-6 flex flex-col md:items-end">
               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Powered by</h4>

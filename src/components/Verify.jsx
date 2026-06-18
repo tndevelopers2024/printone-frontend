@@ -123,12 +123,12 @@ export default function Verify({ onVerified }) {
             <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-800 tracking-tight leading-[1.1] mb-4">
               Claim your <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-amber-500">
-                welcome kits.
+                welcome kit.
               </span>
             </h1>
             <p className="text-slate-500 text-base sm:text-lg font-medium leading-relaxed max-w-md">
               {step === 'email' ? (
-                "Enter your company email to receive a secure one-time passcode. No passwords required."
+                "Enter your company email ID to receive a secure one-time passcode. No passwords required."
               ) : (
                 <span className="flex flex-col gap-1">
                   <span>We sent a 6-digit passcode to</span>
@@ -154,7 +154,7 @@ export default function Verify({ onVerified }) {
                     onChange={e => { setEmail(e.target.value); setError('') }}
                   />
                   <label className="absolute left-6 top-5 text-slate-400 font-semibold text-base transition-all peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-brand-orange peer-focus:font-bold peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:scale-75 peer-[:not(:placeholder-shown)]:font-bold pointer-events-none origin-left">
-                    Company Email
+                    Enter your company email ID
                   </label>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 peer-focus:opacity-100 transition-opacity text-brand-orange">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -317,11 +317,11 @@ export default function Verify({ onVerified }) {
 
         {/* ── Right Panel (Image) ── */}
         <div className="hidden lg:block w-1/2 p-4">
-          <div className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-2xl group">
+          <div className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-2xl group bg-white">
             <img
-              src="/combo-kit.png"
+              src="/combo-kit.webp"
               alt="Premium Onboarding Kit"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
             
