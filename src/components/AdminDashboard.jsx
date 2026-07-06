@@ -93,6 +93,10 @@ const OrderDetailsModal = ({ order, kits, onClose, onUpdateStatus, updateDeliver
                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Contact Hash</p>
                       <p className="text-xs font-black text-slate-900">{order.employeeDetails.phone}</p>
                     </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Employee ID</p>
+                      <p className="text-xs font-black text-slate-900">{order.employeeDetails.employeeId || 'N/A'}</p>
+                    </div>
                   </div>
                 </section>
 

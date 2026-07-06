@@ -51,7 +51,8 @@ export default function Checkout({ selectedKits, employee, onOrderPlaced }) {
       employeeDetails: {
         name: employee.name,
         email: formData.email,
-        phone: formData.phone
+        phone: formData.phone,
+        employeeId: employee.employeeId
       },
       deliveryMethod,
       shippingAddress: {
